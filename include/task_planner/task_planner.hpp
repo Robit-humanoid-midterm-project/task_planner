@@ -13,6 +13,11 @@ class TaskPlanner : public rclcpp::Node
     ~TaskPlanner();
 
   private:
-    void state_change_callback();
     rclcpp::Publisher<M2Ik>::SharedPtr Master2Ik_pub;
+    void state_change_callback();
+
+    double x_length = 0.0;
+    double y_length = 0.0;
+    double yaw = 0.0;
+    double flag = 0.0;
 };
