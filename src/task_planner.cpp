@@ -3,6 +3,8 @@
 TaskPlanner::TaskPlanner() : Node("task_planner")
 {
     Master2Ik_pub = this->create_publisher<M2Ik>("master2ik", 10);
+
+    timer_ = this->create_wall_timer(std::chrono::milliseconds(3000), std::bind(&TaskPlanner::timer_callback, this));
 }
 
 TaskPlanner::~TaskPlanner()
@@ -20,6 +22,22 @@ void TaskPlanner::state_change_callback()
     msg.flag = flag;
 
     Master2Ik_pub->publish(msg);
+}
+void TaskPlanner::timer_callback() // test
+{
+    if (i % 2 == 0)
+    {
+        x_length += 15;
+        flag = 1;
+        i++;
+    }
+    else
+    {
+        x_length -= 15;
+        flag = 0;
+        i = 0;
+    }
+    state_change_callback();
 }
 
 int main(int argc, char *argv[])
