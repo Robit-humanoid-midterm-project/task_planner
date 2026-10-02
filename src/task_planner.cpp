@@ -12,7 +12,7 @@ TaskPlanner::TaskPlanner() : Node("task_planner")
     timer_ =
         this->create_wall_timer(std::chrono::milliseconds(1000 / 20), std::bind(&TaskPlanner::timer_callback, this));
 
-    request_global_data();
+    // request_global_data();
 }
 
 TaskPlanner::~TaskPlanner()
