@@ -28,12 +28,41 @@ class TaskPlanner : public rclcpp::Node
     void vision_data_topic_callback(const VisionData::SharedPtr msg);
 
     rclcpp::Publisher<M2Ik>::SharedPtr Master2Ik_pub;
-    void state_change_callback();
+    void state_update_callback();
 
     rclcpp::TimerBase::SharedPtr timer_; // test
     void timer_callback();
 
+    // void get_position(double dist_y, double dist_x);
+    void test_vision_walk(std::array<double, 2> dist);
+
+    double speed = 20;
+    void forward();
+    void backward();
+    void left();
+    void right();
+    void turn_left();
+    void turn_right();
+    void standstill();
+    void play();
+    void stop();
+
     int i = 0;
+
+    int phase = 1;                                      // 1: 0 ~ 1.5m, 2: 1.5 ~ 3m, 3: 3 ~ 4.5m, 4: 4.5 ~ 6m
+    int x_position = 4;                                 // 좌: 2, 중: 4, 우: 6 ,사잇값:1, 3, 5, 7
+    std::array<double, 2> current_position = {0, 0.75}; // (y, x)
+
+    // yaml에서 받아오기, + x, y, yaw min ~ max값
+    double x_l_default = -10;
+    double y_l_default = 6;
+    double yaw_default = -1;
+    // double x_l_min;
+    // double x_l_max;
+    // double y_l_min;
+    // double y_l_max;
+    // double yaw_min;
+    // double yaw_max;
 
     // ---------
     // Master2Ik
@@ -54,7 +83,7 @@ class TaskPlanner : public rclcpp::Node
 
     double left_x_1_dist = 0.0;
     double right_x_2_dist = 0.0;
-    double theta = 0.0;
+    // double theta = 0.0;
 
     std::array<double, 3> section_1{0.0, 0.0, 0.0};
     std::array<double, 3> section_2{0.0, 0.0, 0.0};

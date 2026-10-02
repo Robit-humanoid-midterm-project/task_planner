@@ -9,7 +9,8 @@ TaskPlanner::TaskPlanner() : Node("task_planner")
 
     Master2Ik_pub = this->create_publisher<M2Ik>("master2ik", 10);
 
-    timer_ = this->create_wall_timer(std::chrono::milliseconds(3000), std::bind(&TaskPlanner::timer_callback, this));
+    timer_ =
+        this->create_wall_timer(std::chrono::milliseconds(1000 / 20), std::bind(&TaskPlanner::timer_callback, this));
 
     request_global_data();
 }
@@ -55,7 +56,7 @@ void TaskPlanner::vision_data_topic_callback(const VisionData::SharedPtr msg)
 
     left_x_1_dist = msg->left_x_1_dist;
     right_x_2_dist = msg->right_x_2_dist;
-    theta = msg->theta;
+    // theta = msg->theta;
 
     section_1 = msg->section_1;
     section_2 = msg->section_2;
@@ -74,7 +75,7 @@ void TaskPlanner::vision_data_topic_callback(const VisionData::SharedPtr msg)
     confidence = msg->confidence;
 }
 
-void TaskPlanner::state_change_callback()
+void TaskPlanner::state_update_callback()
 {
     M2Ik msg;
 
@@ -86,21 +87,101 @@ void TaskPlanner::state_change_callback()
 
     Master2Ik_pub->publish(msg);
 }
-void TaskPlanner::timer_callback() // test
+void TaskPlanner::timer_callback() // temp
 {
-    if (i % 2 == 0)
+    test_vision_walk(obstacle_1);
+    state_update_callback();
+}
+
+// void TaskPlanner::get_position(double dist_y, double dist_x)
+// {
+// }
+
+void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
+{
+    if (dist[0] >= 0.01 && dist[0] <= 1.0)
     {
-        x_length += 15;
-        flag = 1;
-        i++;
+        if (dist[1] >= 0 && dist[1] < 0.58)
+        {
+            left();
+        }
+        else if (dist[1] < 0 && dist[1] > -0.58)
+        {
+            right();
+        }
     }
     else
-    {
-        x_length -= 15;
-        flag = 0;
-        i = 0;
-    }
-    state_change_callback();
+        forward();
+}
+
+// test
+void TaskPlanner::forward()
+{
+    x_length = speed; // 20
+    y_length = y_l_default;
+    yaw = yaw_default;
+    flag = 1;
+}
+
+void TaskPlanner::backward()
+{
+    x_length = -speed;
+    y_length = y_l_default;
+    yaw = yaw_default;
+    flag = 1;
+}
+
+void TaskPlanner::left()
+{
+    x_length = x_l_default;
+    y_length = speed;
+    yaw = yaw_default;
+    flag = 1;
+}
+
+void TaskPlanner::right()
+{
+    x_length = x_l_default;
+    y_length = -speed;
+    yaw = yaw_default;
+    flag = 1;
+}
+
+void TaskPlanner::turn_left()
+{
+    x_length = x_l_default;
+    y_length = y_l_default;
+    yaw = speed;
+    flag = 1;
+}
+
+void TaskPlanner::turn_right()
+{
+    x_length = x_l_default;
+    y_length = y_l_default;
+    yaw = -speed;
+    flag = 1;
+}
+
+void TaskPlanner::standstill() // play
+{
+    x_length = x_l_default;
+    y_length = y_l_default;
+    yaw = yaw_default;
+    flag = 1;
+}
+
+void TaskPlanner::play()
+{
+    standstill();
+}
+
+void TaskPlanner::stop()
+{
+    x_length = x_l_default;
+    y_length = y_l_default;
+    yaw = yaw_default;
+    flag = 0;
 }
 
 int main(int argc, char *argv[])
