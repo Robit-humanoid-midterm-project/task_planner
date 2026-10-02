@@ -85,8 +85,12 @@ void TaskPlanner::state_update_callback()
     msg.yaw = yaw;
     msg.flag = flag;
 
+    RCLCPP_INFO(this->get_logger(), "Publishing M2Ik -> x: %.2f, y: %.2f, yaw: %.2f, flag: %d", msg.x_length,
+                msg.y_length, msg.yaw, msg.flag);
+
     Master2Ik_pub->publish(msg);
 }
+
 void TaskPlanner::timer_callback() // temp
 {
     test_vision_walk(obstacle_1);
@@ -118,56 +122,56 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
 void TaskPlanner::forward()
 {
     x_length = speed; // 20
-    y_length = y_l_default;
-    yaw = yaw_default;
+    y_length = 0;
+    yaw = 0;
     flag = 1;
 }
 
 void TaskPlanner::backward()
 {
     x_length = -speed;
-    y_length = y_l_default;
-    yaw = yaw_default;
+    y_length = 0;
+    yaw = 0;
     flag = 1;
 }
 
 void TaskPlanner::left()
 {
-    x_length = x_l_default;
+    x_length = 0;
     y_length = speed;
-    yaw = yaw_default;
+    yaw = 0;
     flag = 1;
 }
 
 void TaskPlanner::right()
 {
-    x_length = x_l_default;
+    x_length = 0;
     y_length = -speed;
-    yaw = yaw_default;
+    yaw = 0;
     flag = 1;
 }
 
 void TaskPlanner::turn_left()
 {
-    x_length = x_l_default;
-    y_length = y_l_default;
+    x_length = 0;
+    y_length = 0;
     yaw = speed;
     flag = 1;
 }
 
 void TaskPlanner::turn_right()
 {
-    x_length = x_l_default;
-    y_length = y_l_default;
+    x_length = 0;
+    y_length = 0;
     yaw = -speed;
     flag = 1;
 }
 
 void TaskPlanner::standstill() // play
 {
-    x_length = x_l_default;
-    y_length = y_l_default;
-    yaw = yaw_default;
+    x_length = 0;
+    y_length = 0;
+    yaw = 0;
     flag = 1;
 }
 
@@ -178,9 +182,9 @@ void TaskPlanner::play()
 
 void TaskPlanner::stop()
 {
-    x_length = x_l_default;
-    y_length = y_l_default;
-    yaw = yaw_default;
+    x_length = 0;
+    y_length = 0;
+    yaw = 0;
     flag = 0;
 }
 
