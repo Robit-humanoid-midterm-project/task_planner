@@ -28,7 +28,7 @@ class TaskPlanner : public rclcpp::Node
     void vision_data_topic_callback(const VisionData::SharedPtr msg);
 
     rclcpp::Publisher<M2Ik>::SharedPtr Master2Ik_pub;
-    void state_update_callback();
+    void update_state();
 
     rclcpp::TimerBase::SharedPtr timer_; // test
     void timer_callback();
@@ -52,6 +52,12 @@ class TaskPlanner : public rclcpp::Node
     int phase = 1;                                      // 1: 0 ~ 1.5m, 2: 1.5 ~ 3m, 3: 3 ~ 4.5m, 4: 4.5 ~ 6m
     int x_position = 4;                                 // 좌: 2, 중: 4, 우: 6 ,사잇값:1, 3, 5, 7
     std::array<double, 2> current_position = {0, 0.75}; // (y, x)
+
+    int detective_count = 0;
+    int undetective_count = 0;
+    const int real_detective_std = 3;
+    const int real_undetective_std = 3;
+    std::string cur_state = "F";
 
     // yaml에서 받아오기, + x, y, yaw min ~ max값
     double x_l_default = -10;
@@ -102,4 +108,6 @@ class TaskPlanner : public rclcpp::Node
     double confidence = 0.0;
     // Vision Data
     // -----------
+
+    std::array<double, 2> get_closest_obstacle();
 };
