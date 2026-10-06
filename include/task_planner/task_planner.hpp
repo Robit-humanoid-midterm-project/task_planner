@@ -6,6 +6,10 @@
 #include "humanoid_interfaces/msg/vision_data.hpp"
 #include "humanoid_interfaces/srv/global_scan_data.hpp"
 
+#include <algorithm>
+#include <deque>
+#include <vector>
+
 using M2Ik = humanoid_interfaces::msg::Master2IkMsg;
 using GlobalData = humanoid_interfaces::srv::GlobalScanData;
 using VisionData = humanoid_interfaces::msg::VisionData;
@@ -35,6 +39,7 @@ class TaskPlanner : public rclcpp::Node
 
     // void get_position(double dist_y, double dist_x);
     void test_vision_walk(std::array<double, 2> dist);
+    int last_dir = 0; // -1 0 1 (L, 0, R)
 
     double speed = 20;
     void forward();
@@ -53,16 +58,16 @@ class TaskPlanner : public rclcpp::Node
     int x_position = 4;                                 // 좌: 2, 중: 4, 우: 6 ,사잇값:1, 3, 5, 7
     std::array<double, 2> current_position = {0, 0.75}; // (y, x)
 
-    int detective_count = 0;
-    int undetective_count = 0;
+    int ob_detective_cnt = 0;
+    int ob_undetective_cnt = 0;
     const int real_detective_std = 3;
     const int real_undetective_std = 3;
-    std::string cur_state = "F";
+    std::string cur_state = "F"; // F, B, L, R, SS, S
 
     // yaml에서 받아오기, + x, y, yaw min ~ max값
-    double x_l_default = -10;
-    double y_l_default = 6;
-    double yaw_default = -1;
+    const double x_l_default = -10;
+    const double y_l_default = 6;
+    const double yaw_default = -1;
     // double x_l_min;
     // double x_l_max;
     // double y_l_min;
@@ -84,12 +89,12 @@ class TaskPlanner : public rclcpp::Node
     double timestamp = 0.0;
     double frame_drop = 0.0;
 
-    double camera_x = 0.0;
+    double camera_x = 0.75;
     double camera_y = 0.0;
 
-    double left_x_1_dist = 0.0;
-    double right_x_2_dist = 0.0;
-    // double theta = 0.0;
+    double left_x_1_dist = 0.75;
+    double right_x_2_dist = 0.75;
+    double theta = 0.0;
 
     std::array<double, 3> section_1{0.0, 0.0, 0.0};
     std::array<double, 3> section_2{0.0, 0.0, 0.0};
@@ -109,5 +114,11 @@ class TaskPlanner : public rclcpp::Node
     // Vision Data
     // -----------
 
+    void get_position();
+    std::deque<double> buffer;
+    int window_size = 5;
+    // int x_undetective_cnt = 0;
+    // const double x_ignore_delta_min = 0.02;
+    // const double x_ignore_delta_max = 0.5;
     std::array<double, 2> get_closest_obstacle();
 };

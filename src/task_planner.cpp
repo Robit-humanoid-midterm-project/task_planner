@@ -10,7 +10,7 @@ TaskPlanner::TaskPlanner() : Node("task_planner")
     Master2Ik_pub = this->create_publisher<M2Ik>("master2ik", 10);
 
     timer_ =
-        this->create_wall_timer(std::chrono::milliseconds(1000 / 20), std::bind(&TaskPlanner::timer_callback, this));
+        this->create_wall_timer(std::chrono::milliseconds(1000 / 50), std::bind(&TaskPlanner::timer_callback, this));
 
     // request_global_data();
 }
@@ -55,30 +55,30 @@ void TaskPlanner::global_data_response_callback(ServiceFuture future)
 void TaskPlanner::vision_data_topic_callback(const VisionData::SharedPtr msg)
 {
     timestamp = msg->timestamp;
-    frame_drop = msg->frame_drop;
+    // frame_drop = msg->frame_drop;
 
-    camera_x = msg->camera_x;
-    camera_y = msg->camera_y;
+    // camera_x = msg->camera_x;
+    // camera_y = msg->camera_y;
 
     left_x_1_dist = msg->left_x_1_dist;
-    right_x_2_dist = msg->right_x_2_dist;
+    // right_x_2_dist = msg->right_x_2_dist;
     // theta = msg->theta;
 
     section_1 = msg->section_1;
     section_2 = msg->section_2;
     section_3 = msg->section_3;
 
-    section_1_detected = msg->section_1_detected;
-    section_2_detected = msg->section_2_detected;
-    section_3_detected = msg->section_3_detected;
+    // section_1_detected = msg->section_1_detected;
+    // section_2_detected = msg->section_2_detected;
+    // section_3_detected = msg->section_3_detected;
 
-    nearest_line = msg->nearest_line;
+    // earest_line = msg->nearest_line;
 
     obstacle_1 = msg->obstacle_1;
     obstacle_2 = msg->obstacle_2;
     obstacle_3 = msg->obstacle_3;
 
-    confidence = msg->confidence;
+    // confidence = msg->confidence;
 }
 // vision data subscribe
 // ---------------------
@@ -88,6 +88,7 @@ void TaskPlanner::timer_callback() // temp
     auto start_time = std::chrono::high_resolution_clock::now(); // delay 체크용
     //----------------------------------------------------------
 
+    get_position();
     test_vision_walk(get_closest_obstacle());
     update_state();
 
@@ -124,9 +125,36 @@ std::array<double, 2> TaskPlanner::get_closest_obstacle()
     return closest_obstacle;
 }
 
-// void TaskPlanner::get_position(double dist_y, double dist_x)
-// {
-// }
+// lastest position get
+void TaskPlanner::get_position()
+{
+    // if (left_x_1_dist < -999.0)
+    // {
+    //     x_undetective_cnt++;
+    //     if (x_undetective_cnt > real_undetective_std)
+    //         camera_x = -1000.0;
+
+    //     return;
+    // }
+    // x_undetective_cnt = 0;
+    if (left_x_1_dist < -999.0)
+        return;
+
+    buffer.push_back(left_x_1_dist);
+    if (buffer.size() > window_size)
+        buffer.pop_front();
+
+    if (buffer.size() < window_size)
+    {
+        camera_x = left_x_1_dist;
+        return;
+    }
+
+    std::vector<double> temp(buffer.begin(), buffer.end());
+    std::nth_element(temp.begin(), temp.begin() + 2, temp.end());
+
+    camera_x = temp[2];
+}
 
 void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
 {
@@ -142,15 +170,29 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
     // 다음 장애물 인식이 필요함 -> 뚫려있는 양쪽 구간 뒤에 인식되는 장애물이 있는지 확인?
 
     // 현재 위치를 알 수 있는 경우 / 없는 경우 고려
-
     int is_detectived = dist[0] >= 0.01 && dist[0] <= 1.25;
+
+    if (camera_x < 0.15 && camera_x > 0.0)
+    {
+        right();
+        if (is_detectived)
+            last_dir = 1;
+        return;
+    }
+    else if (camera_x > 1.35 && camera_x < 1.5)
+    {
+        left();
+        if (is_detectived)
+            last_dir = -1;
+        return;
+    }
 
     if (!is_detectived)
     {
-        detective_count = 0;
-        undetective_count++;
+        ob_detective_cnt = 0;
+        ob_undetective_cnt++;
 
-        if (undetective_count < real_undetective_std)
+        if (ob_undetective_cnt < real_undetective_std)
         {
             if (cur_state == "L")
                 left();
@@ -163,14 +205,40 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
         return;
     }
 
-    undetective_count = 0;
-    detective_count++;
+    ob_undetective_cnt = 0;
+    ob_detective_cnt++;
 
-    if (detective_count > real_detective_std)
+    if (ob_detective_cnt > real_detective_std)
     {
-        if (dist[1] >= 0 && dist[1] < 0.58)
+
+        if (last_dir == -1)
+        {
+            if (dist[1] <= 1.5 && dist[1] > 0.40)
+                last_dir = 0;
+            return;
+        }
+        if (last_dir == 1)
+        {
+            if (dist[1] >= -1.5 && dist[1] < -0.40)
+                last_dir = 0;
+            return;
+        }
+
+        // if (camera_x < 0.15 && camera_x > 0.0)
+        // {
+        //     right();
+        //     return;
+        // }
+        // else if (camera_x > 1.35 && camera_x < 1.5)
+        // {
+        //     left();
+        //     return;
+        // }
+
+        // TODO: 가운데에서 장애물 2개 사이 진동하는 경우 필터링 필요
+        if (dist[1] >= 0 && dist[1] < 0.45)
             left();
-        else if (dist[1] < 0 && dist[1] > -0.58)
+        else if (dist[1] < 0 && dist[1] > -0.45)
             right();
     }
     else
