@@ -17,6 +17,7 @@ TaskPlanner::TaskPlanner() : Node("task_planner")
 
 TaskPlanner::~TaskPlanner()
 {
+    stop();
 }
 
 // ---
@@ -258,8 +259,8 @@ void TaskPlanner::update_state()
     msg.yaw = yaw;
     msg.flag = flag;
 
-    RCLCPP_INFO(this->get_logger(), "x_speed: %.2f, y_speed: %.2f || x_position: %.3f", msg.x_length,
-                msg.y_length, camera_x);
+    RCLCPP_INFO(this->get_logger(), "x_speed: %.2f, y_speed: %.2f || x_position: %.3f", msg.x_length, msg.y_length,
+                camera_x);
 
     Master2Ik_pub->publish(msg);
 }
