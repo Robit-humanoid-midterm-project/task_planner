@@ -1,8 +1,8 @@
 /**:
   ros__parameters:
-    map_x: 1.5
+    map_x: 1.4
     map_y: 6.0
     object_width: 0.4
     object_height: 0.4
-    start_x: 0.75
+    start_x: 0.7
     start_y: 0.0

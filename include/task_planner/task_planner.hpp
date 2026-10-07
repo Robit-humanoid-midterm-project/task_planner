@@ -41,7 +41,12 @@ class TaskPlanner : public rclcpp::Node
     void test_vision_walk(std::array<double, 2> dist);
     int last_dir = 0; // -1 0 1 (L, 0, R)
 
-    double speed = 20;
+    double speed = 20.0;
+    double f_speed = 30.0;
+    double b_speed = -15.0;
+    double side_speed = 10.0;
+    double side_forward = 4.5;
+
     void forward();
     void backward();
     void left();
@@ -60,8 +65,8 @@ class TaskPlanner : public rclcpp::Node
 
     int ob_detective_cnt = 0;
     int ob_undetective_cnt = 0;
-    const int real_detective_std = 3;
-    const int real_undetective_std = 3;
+    const int real_detective_std = 1;
+    const int real_undetective_std = 1;
     std::string cur_state = "F"; // F, B, L, R, SS, S
 
     // yaml에서 받아오기, + x, y, yaw min ~ max값
@@ -89,11 +94,11 @@ class TaskPlanner : public rclcpp::Node
     double timestamp = 0.0;
     double frame_drop = 0.0;
 
-    double camera_x = 0.75;
+    double camera_x = 0.7;
     double camera_y = 0.0;
 
-    double left_x_1_dist = 0.75;
-    double right_x_2_dist = 0.75;
+    double left_x_1_dist = 0.7;
+    double right_x_2_dist = 0.7;
     double theta = 0.0;
 
     std::array<double, 3> section_1{0.0, 0.0, 0.0};
@@ -116,7 +121,7 @@ class TaskPlanner : public rclcpp::Node
 
     void get_position();
     std::deque<double> buffer;
-    int window_size = 5;
+    long unsigned int window_size = 5;
     // int x_undetective_cnt = 0;
     // const double x_ignore_delta_min = 0.02;
     // const double x_ignore_delta_max = 0.5;

@@ -122,6 +122,7 @@ std::array<double, 2> TaskPlanner::get_closest_obstacle()
             closest_obstacle = obs;
         }
     }
+    RCLCPP_INFO(this->get_logger(), "y_dist: %.2f, x_dist: %.2f", closest_obstacle[0], closest_obstacle[1]);
     return closest_obstacle;
 }
 
@@ -137,14 +138,14 @@ void TaskPlanner::get_position()
     //     return;
     // }
     // x_undetective_cnt = 0;
-    if (left_x_1_dist < -999.0)
-        return;
+    // if (left_x_1_dist < -999.0)
+    //     return;
 
     buffer.push_back(left_x_1_dist);
     if (buffer.size() > window_size)
         buffer.pop_front();
 
-    if (buffer.size() < window_size)
+    if (buffer.size() <= window_size)
     {
         camera_x = left_x_1_dist;
         return;
@@ -170,16 +171,16 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
     // 다음 장애물 인식이 필요함 -> 뚫려있는 양쪽 구간 뒤에 인식되는 장애물이 있는지 확인?
 
     // 현재 위치를 알 수 있는 경우 / 없는 경우 고려
-    int is_detectived = dist[0] >= 0.01 && dist[0] <= 1.25;
+    int is_detectived = dist[0] >= 0.01 && dist[0] <= 1.2;
 
-    if (camera_x < 0.15 && camera_x > 0.0)
+    if (camera_x < 0.15 && camera_x >= 0.0)
     {
         right();
         if (is_detectived)
             last_dir = 1;
         return;
     }
-    else if (camera_x > 1.35 && camera_x < 1.5)
+    else if (camera_x > 1.25 && camera_x <= 1.4)
     {
         left();
         if (is_detectived)
@@ -213,13 +214,13 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
 
         if (last_dir == -1)
         {
-            if (dist[1] <= 1.5 && dist[1] > 0.40)
+            if (dist[1] <= 1.4 && dist[1] > 0.25)
                 last_dir = 0;
             return;
         }
         if (last_dir == 1)
         {
-            if (dist[1] >= -1.5 && dist[1] < -0.40)
+            if (dist[1] >= -1.4 && dist[1] < -0.25)
                 last_dir = 0;
             return;
         }
@@ -236,9 +237,9 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
         // }
 
         // TODO: 가운데에서 장애물 2개 사이 진동하는 경우 필터링 필요
-        if (dist[1] >= 0 && dist[1] < 0.45)
+        if (dist[1] >= 0 && dist[1] < 0.4)
             left();
-        else if (dist[1] < 0 && dist[1] > -0.45)
+        else if (dist[1] < 0 && dist[1] > -0.4)
             right();
     }
     else
@@ -257,8 +258,8 @@ void TaskPlanner::update_state()
     msg.yaw = yaw;
     msg.flag = flag;
 
-    RCLCPP_INFO(this->get_logger(), "Publishing M2Ik -> x: %.2f, y: %.2f, yaw: %.2f, flag: %d", msg.x_length,
-                msg.y_length, msg.yaw, msg.flag);
+    RCLCPP_INFO(this->get_logger(), "x_speed: %.2f, y_speed: %.2f || x_position: %.3f", msg.x_length,
+                msg.y_length, camera_x);
 
     Master2Ik_pub->publish(msg);
 }
