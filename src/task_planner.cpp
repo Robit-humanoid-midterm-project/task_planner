@@ -2,6 +2,13 @@
 
 TaskPlanner::TaskPlanner() : Node("task_planner")
 {
+    speed = declare_parameter<float>("speed", 20);
+    left_x_1_dist = declare_parameter<float>("start_x", 0.7);
+    camera_x = left_x_1_dist;
+    camera_y = declare_parameter<float>("start_y", 0.0);
+    map_width = declare_parameter<float>("map_width", 1.4);
+    close_std = declare_parameter<float>("close_std", 0.15);
+
     GlobalData_client = this->create_client<GlobalData>("vision_node"); // vision node 이름
 
     VisionData_sub = this->create_subscription<VisionData>(
@@ -65,9 +72,9 @@ void TaskPlanner::vision_data_topic_callback(const VisionData::SharedPtr msg)
     // right_x_2_dist = msg->right_x_2_dist;
     // theta = msg->theta;
 
-    section_1 = msg->section_1;
-    section_2 = msg->section_2;
-    section_3 = msg->section_3;
+    // section_1 = msg->section_1;
+    // section_2 = msg->section_2;
+    // section_3 = msg->section_3;
 
     // section_1_detected = msg->section_1_detected;
     // section_2_detected = msg->section_2_detected;
@@ -101,32 +108,6 @@ void TaskPlanner::timer_callback() // temp
         RCLCPP_WARN(this->get_logger(), "Timer callback delay: %ld us", duration);
 }
 
-// vision 내에 인식되는 장애물 중 가장 가까운 obstacle 반환
-std::array<double, 2> TaskPlanner::get_closest_obstacle()
-{
-    std::array<std::array<double, 2>, 3> raw_obstacles = {obstacle_1, obstacle_2, obstacle_3};
-
-    double min_distance = 9999.0;
-    std::array<double, 2> closest_obstacle = {-1000.0, -1000.0};
-
-    for (const auto &obs : raw_obstacles)
-    {
-        if (obs[0] <= -999.0 || obs[1] <= -999.0)
-            continue;
-
-        // hypot(x, y): 유클라디안(피타고라스) 거리
-        double distance = std::hypot(obs[1], obs[0]);
-
-        if (distance < min_distance)
-        {
-            min_distance = distance;
-            closest_obstacle = obs;
-        }
-    }
-    RCLCPP_INFO(this->get_logger(), "y_dist: %.2f, x_dist: %.2f", closest_obstacle[0], closest_obstacle[1]);
-    return closest_obstacle;
-}
-
 // lastest position get
 void TaskPlanner::get_position()
 {
@@ -158,30 +139,48 @@ void TaskPlanner::get_position()
     camera_x = temp[2];
 }
 
+// vision 내에 인식되는 장애물 중 가장 가까운 obstacle 반환
+std::array<double, 2> TaskPlanner::get_closest_obstacle()
+{
+    std::array<std::array<double, 2>, 3> raw_obstacles = {obstacle_1, obstacle_2, obstacle_3};
+
+    double min_distance = 9999.0;
+    std::array<double, 2> closest_obstacle = {-1000.0, -1000.0};
+
+    for (const auto &obs : raw_obstacles)
+    {
+        if (obs[0] <= -999.0 || obs[1] <= -999.0)
+            continue;
+
+        // hypot(x, y): 유클라디안(피타고라스) 거리
+        double distance = std::hypot(obs[1], obs[0]);
+
+        if (distance < min_distance)
+        {
+            min_distance = distance;
+            closest_obstacle = obs;
+        }
+    }
+    RCLCPP_INFO(this->get_logger(), "y_dist: %.2f, x_dist: %.2f", closest_obstacle[0], closest_obstacle[1]);
+    return closest_obstacle;
+}
+
 void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
 {
-    // 장애물이 연속 2개 있는 경우 장애물 사이에서 진동할 수 있음(최근접 obstable이 바뀌면서)
-    // 1. 멀리서 판별이 가능한 경우 -> 지정된 곳으로 이동
-    // 2. 멀리서 판별하지 못한 경우 -> 일단 가까운 obstacle을 피하고, 만약 해당 방향이 막힌 곳이면 반대 방향을 고정함
+    // 장애물이 가운데 하나 있으면서 다음 구간 장애물이 왼쪽 또는 오른쪽만 뚫려있는 경우 최단 경로
+    // 다음 구간 장애물 인식 필요
+    // 현재 구간 뒤에 있는 빨강+파랑 픽셀 수가 적은쪽으로 이동하는 방법
 
-    // 장애물이 양쪽 사이드에 있는 경우 가운데로 어떻게 갈지
-    // 1. 사이드 라인 인식 가능한 경우 -> 사이드 라인과 멀어지는 방향으로 이동
-    // 2. 사이드 라인 인식 불가능한 경우 -> 멀리서 (1, 0, 1)을 인식해야만 함 -> 가운데로 이동
-
-    // 장애물이 가운데 하나 있으면서 다음 구간 장애물이 왼쪽 또는 오른쪽만 뚫려있는 경우
-    // 다음 장애물 인식이 필요함 -> 뚫려있는 양쪽 구간 뒤에 인식되는 장애물이 있는지 확인?
-
-    // 현재 위치를 알 수 있는 경우 / 없는 경우 고려
     int is_detectived = dist[0] >= 0.01 && dist[0] <= 1.2;
 
-    if (camera_x < 0.15 && camera_x >= 0.0)
+    if (camera_x < close_std && camera_x >= 0.0)
     {
         right();
         if (is_detectived)
             last_dir = 1;
         return;
     }
-    else if (camera_x > 1.25 && camera_x <= 1.4)
+    else if (camera_x > map_width - close_std && camera_x <= map_width)
     {
         left();
         if (is_detectived)
@@ -212,35 +211,25 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
 
     if (ob_detective_cnt > real_detective_std)
     {
-
+        float last_dir_escape_std = 0.25;
         if (last_dir == -1)
         {
-            if (dist[1] <= 1.4 && dist[1] > 0.25)
+            if (dist[1] <= map_width && dist[1] > last_dir_escape_std)
                 last_dir = 0;
             return;
         }
         if (last_dir == 1)
         {
-            if (dist[1] >= -1.4 && dist[1] < -0.25)
+            if (dist[1] >= -map_width && dist[1] < -last_dir_escape_std)
                 last_dir = 0;
             return;
         }
 
-        // if (camera_x < 0.15 && camera_x > 0.0)
-        // {
-        //     right();
-        //     return;
-        // }
-        // else if (camera_x > 1.35 && camera_x < 1.5)
-        // {
-        //     left();
-        //     return;
-        // }
-
         // TODO: 가운데에서 장애물 2개 사이 진동하는 경우 필터링 필요
-        if (dist[1] >= 0 && dist[1] < 0.4)
+        float escape_std = 0.4;
+        if (dist[1] >= 0 && dist[1] < escape_std)
             left();
-        else if (dist[1] < 0 && dist[1] > -0.4)
+        else if (dist[1] < 0 && dist[1] > -escape_std)
             right();
     }
     else
