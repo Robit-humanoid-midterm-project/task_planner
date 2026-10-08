@@ -274,12 +274,14 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
             left();
         }
         else if (dist_x < 0 && dist_x >= -escape_std)
+        {
             if (dist_second_x <= two_std && dist_second_x > 0)
             {
                 right();
                 return;
             }
-        right();
+            right();
+        }
     }
     else
         forward();
