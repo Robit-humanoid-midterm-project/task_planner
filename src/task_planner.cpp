@@ -2,12 +2,23 @@
 
 TaskPlanner::TaskPlanner() : Node("task_planner")
 {
-    speed = declare_parameter<float>("speed", 20);
-    left_x_1_dist = declare_parameter<float>("start_x", 0.7);
+    speed = declare_parameter<double>("speed", 20);
+    left_x_1_dist = declare_parameter<double>("start_x", 0.7);
     camera_x = left_x_1_dist;
-    camera_y = declare_parameter<float>("start_y", 0.0);
-    map_width = declare_parameter<float>("map_width", 1.4);
-    close_std = declare_parameter<float>("close_std", 0.15);
+    camera_y = declare_parameter<double>("start_y", 0.0);
+    map_width = declare_parameter<double>("map_width", 1.4);
+    close_std = declare_parameter<double>("close_std", 0.15);
+
+    F_Max_Test_X = declare_parameter<double>("F_Max_Test_X", 40.0);
+    F_Min_Test_X = declare_parameter<double>("F_Min_Test_X", 30.0);
+
+    B_Test_x = declare_parameter<double>("B_Test_x", -15.0);
+
+    L_Test_x = declare_parameter<double>("L_Test_x", 4.5);
+    L_Test_side = declare_parameter<double>("L_Test_side", 10.0);
+
+    R_Test_x = declare_parameter<double>("R_Test_x", 4.5);
+    R_Test_side = declare_parameter<double>("R_Test_side", -10.0);
 
     GlobalData_client = this->create_client<GlobalData>("vision_node"); // vision node 이름
 
@@ -140,8 +151,11 @@ void TaskPlanner::get_position()
     //     return;
     // }
     // x_undetective_cnt = 0;
+
     // if (left_x_1_dist < -999.0)
     //     return;
+
+    // TODO: 선 인식 정확하지 않은 경우 속도를 고정한 다음에 속도값 미분 -> 거리 환산하여 추정값 사용
 
     buffer.push_back(left_x_1_dist);
     if (buffer.size() > window_size)
@@ -278,6 +292,7 @@ void TaskPlanner::update_state()
 void TaskPlanner::forward()
 {
     x_length = speed; // 20
+    // x_length = F_Min_Test_X;
     y_length = 0;
     yaw = 0;
     flag = 1;
@@ -286,6 +301,7 @@ void TaskPlanner::forward()
 void TaskPlanner::backward()
 {
     x_length = -speed;
+    // x_length = B_Test_x;
     y_length = 0;
     yaw = 0;
     flag = 1;
@@ -295,6 +311,8 @@ void TaskPlanner::left()
 {
     x_length = 0;
     y_length = speed;
+    // x_length = L_Test_x;
+    // y_length = L_Test_side;
     yaw = 0;
     flag = 1;
     cur_state = "L";
@@ -303,6 +321,8 @@ void TaskPlanner::right()
 {
     x_length = 0;
     y_length = -speed;
+    // x_length = R_Test_x;
+    // y_length = R_Test_side;
     yaw = 0;
     flag = 1;
     cur_state = "R";

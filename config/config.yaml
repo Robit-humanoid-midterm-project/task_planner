@@ -6,3 +6,25 @@
     start_x: 0.7
     start_y: 0.0
     speed: 20.0
+
+    # TODO: 해당 값으로 보행 되는지 확인 필요
+    #기본 전진
+    F_Max_Test_X: 40.0
+    F_Min_Test_X: 30.0
+    F_Test_Side: 0.00
+    F_Test_Yaw: 0.00
+
+    #기본 후진
+    B_Test_x: -15.0
+    B_Test_side: 0.00
+    B_Test_Yaw: 0.00
+
+    #왼쪽 수평 이동
+    L_Test_x: 4.50
+    L_Test_side: 10.00
+    L_Test_Yaw: 0.00
+
+    #오른쪽 수평 이동
+    R_Test_x: 4.50
+    R_Test_side: -10.00
+    R_Test_Yaw: 0.00

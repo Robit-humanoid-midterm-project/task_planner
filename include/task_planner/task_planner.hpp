@@ -75,13 +75,20 @@ class TaskPlanner : public rclcpp::Node
     const int real_undetective_std = 1;
     std::string cur_state = "F"; // F, B, L, R, SS, S
 
-    float map_width = 1.4;
-    float close_std = 0.15;
+    double map_width = 1.4;
+    double close_std = 0.15;
 
     // yaml에서 받아오기, + x, y, yaw min ~ max값
-    // const double x_l_default = -10;
-    // const double y_l_default = 6;
-    // const double yaw_default = -1;
+    double F_Max_Test_X = 40.0;
+    double F_Min_Test_X = 30.0;
+
+    double B_Test_x = -15.0;
+
+    double L_Test_x = 4.50;
+    double L_Test_side = 10.00;
+
+    double R_Test_x = 4.50;
+    double R_Test_side = -10.00;
 
     // ---------
     // Master2Ik
