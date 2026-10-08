@@ -76,7 +76,7 @@ class TaskPlanner : public rclcpp::Node
     std::string cur_state = "F"; // F, B, L, R, SS, S
 
     double map_width = 1.4;
-    double close_std = 0.15;
+    double close_std = 0.12;
 
     // yaml에서 받아오기, + x, y, yaw min ~ max값
     double F_Max_Test_X = 40.0;

@@ -2,7 +2,7 @@
   ros__parameters:
     # float
     map_width: 1.4
-    close_std: 0.15
+    close_std: 0.12
     start_x: 0.7
     start_y: 0.0
     speed: 20.0

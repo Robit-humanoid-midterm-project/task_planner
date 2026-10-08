@@ -7,7 +7,7 @@ TaskPlanner::TaskPlanner() : Node("task_planner")
     camera_x = left_x_1_dist;
     camera_y = declare_parameter<double>("start_y", 0.0);
     map_width = declare_parameter<double>("map_width", 1.4);
-    close_std = declare_parameter<double>("close_std", 0.15);
+    close_std = declare_parameter<double>("close_std", 0.12);
 
     F_Max_Test_X = declare_parameter<double>("F_Max_Test_X", 40.0);
     F_Min_Test_X = declare_parameter<double>("F_Min_Test_X", 30.0);
@@ -117,10 +117,11 @@ void TaskPlanner::control_data_callback(const controlData::SharedPtr msg)
 
 void TaskPlanner::timer_callback() // temp
 {
-    RCLCPP_INFO(this->get_logger(), "cur state: %s", cur_state.c_str());
+    // RCLCPP_INFO(this->get_logger(), "cur state: %s", cur_state.c_str());
     if (state != 3)
     {
         stop();
+        update_state();
         return;
     }
 
@@ -142,21 +143,6 @@ void TaskPlanner::timer_callback() // temp
 // lastest position get
 void TaskPlanner::get_position()
 {
-    // if (left_x_1_dist < -999.0)
-    // {
-    //     x_undetective_cnt++;
-    //     if (x_undetective_cnt > real_undetective_std)
-    //         camera_x = -1000.0;
-
-    //     return;
-    // }
-    // x_undetective_cnt = 0;
-
-    // if (left_x_1_dist < -999.0)
-    //     return;
-
-    // TODO: 선 인식 정확하지 않은 경우 속도를 고정한 다음에 속도값 미분 -> 거리 환산하여 추정값 사용
-
     buffer.push_back(left_x_1_dist);
     if (buffer.size() > window_size)
         buffer.pop_front();
@@ -246,7 +232,8 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
 
     if (ob_detective_cnt > real_detective_std)
     {
-        float last_dir_escape_std = 0.25;
+        // TODO: 가운데에서 장애물 2개 사이 진동하는 경우 필터링 필요
+        float last_dir_escape_std = 0.28;
         if (last_dir == -1)
         {
             if (dist[1] <= map_width && dist[1] > last_dir_escape_std)
@@ -260,8 +247,7 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
             return;
         }
 
-        // TODO: 가운데에서 장애물 2개 사이 진동하는 경우 필터링 필요
-        float escape_std = 0.4;
+        float escape_std = 0.32;
         if (dist[1] >= 0 && dist[1] < escape_std)
             left();
         else if (dist[1] < 0 && dist[1] > -escape_std)
@@ -283,16 +269,16 @@ void TaskPlanner::update_state()
     msg.yaw = yaw;
     msg.flag = flag;
 
-    // RCLCPP_INFO(this->get_logger(), "x_speed: %.2f, y_speed: %.2f || x_position: %.3f", msg.x_length, msg.y_length,
-    //             camera_x);
+    RCLCPP_INFO(this->get_logger(), "x_speed: %.2f, y_speed: %.2f || x_position: %.3f", msg.x_length, msg.y_length,
+                camera_x);
 
     Master2Ik_pub->publish(msg);
 }
 
 void TaskPlanner::forward()
 {
-    x_length = speed; // 20
-    // x_length = F_Min_Test_X;
+    // x_length = speed; // 20
+    x_length = F_Min_Test_X;
     y_length = 0;
     yaw = 0;
     flag = 1;
@@ -300,8 +286,8 @@ void TaskPlanner::forward()
 }
 void TaskPlanner::backward()
 {
-    x_length = -speed;
-    // x_length = B_Test_x;
+    // x_length = -speed;
+    x_length = B_Test_x;
     y_length = 0;
     yaw = 0;
     flag = 1;
