@@ -295,37 +295,13 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
 // state
 void TaskPlanner::update_state()
 {
-    // 상태 변경 시 정지
-    static std::string prev_state = "NONE";
-    static int pause_cnt = 0;
-    const int pause_period = 20;
-
-    if (prev_state == "NONE")
-        prev_state = cur_state;
-
-    if (cur_state != prev_state)
-    {
-        pause_cnt = pause_period;
-        prev_state = cur_state;
-    }
-
     M2Ik msg;
 
-    if (pause_cnt > 0)
-    {
-        pause_cnt--;
-        msg.x_length = 0.0;
-        msg.y_length = 0.0;
-        msg.yaw = 0.0;
-        msg.flag = 0;
-    }
-    else
-    {
-        msg.x_length = x_length;
-        msg.y_length = y_length;
-        msg.yaw = yaw;
-        msg.flag = flag;
-    }
+    msg.x_length = x_length;
+    msg.y_length = y_length;
+    msg.yaw = yaw;
+    msg.flag = flag;
+    
 
     RCLCPP_INFO(this->get_logger(), "x_speed: %.2f, y_speed: %.2f || x_position: %.3f, dist_x: %.2f || is_d: %d",
                 msg.x_length, msg.y_length, camera_x, dist_x, detectived);
