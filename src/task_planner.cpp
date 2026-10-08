@@ -14,6 +14,9 @@ TaskPlanner::TaskPlanner() : Node("task_planner")
     VisionData_sub = this->create_subscription<VisionData>(
         "vision2master", 10, std::bind(&TaskPlanner::vision_data_topic_callback, this, std::placeholders::_1));
 
+    ControlData_sub = this->create_subscription<controlData>(
+        "gamecontroldata", 10, std::bind(&TaskPlanner::control_data_callback, this, std::placeholders::_1));
+
     Master2Ik_pub = this->create_publisher<M2Ik>("master2ik", 10);
 
     timer_ =
@@ -91,8 +94,24 @@ void TaskPlanner::vision_data_topic_callback(const VisionData::SharedPtr msg)
 // vision data subscribe
 // ---------------------
 
+// ------------------------------
+// game controller data subscribe
+void TaskPlanner::control_data_callback(const controlData::SharedPtr msg)
+{
+    state = msg->state;
+    RCLCPP_INFO(this->get_logger(), "gamecontroller state: %d", state);
+}
+// game controller data subscribe
+// ------------------------------
+
 void TaskPlanner::timer_callback() // temp
 {
+    if (state != 3)
+    {
+        stop();
+        return;
+    }
+
     auto start_time = std::chrono::high_resolution_clock::now(); // delay 체크용
     //----------------------------------------------------------
 
@@ -161,7 +180,7 @@ std::array<double, 2> TaskPlanner::get_closest_obstacle()
             closest_obstacle = obs;
         }
     }
-    RCLCPP_INFO(this->get_logger(), "y_dist: %.2f, x_dist: %.2f", closest_obstacle[0], closest_obstacle[1]);
+    // RCLCPP_INFO(this->get_logger(), "y_dist: %.2f, x_dist: %.2f", closest_obstacle[0], closest_obstacle[1]);
     return closest_obstacle;
 }
 
@@ -248,8 +267,8 @@ void TaskPlanner::update_state()
     msg.yaw = yaw;
     msg.flag = flag;
 
-    RCLCPP_INFO(this->get_logger(), "x_speed: %.2f, y_speed: %.2f || x_position: %.3f", msg.x_length, msg.y_length,
-                camera_x);
+    // RCLCPP_INFO(this->get_logger(), "x_speed: %.2f, y_speed: %.2f || x_position: %.3f", msg.x_length, msg.y_length,
+    //             camera_x);
 
     Master2Ik_pub->publish(msg);
 }

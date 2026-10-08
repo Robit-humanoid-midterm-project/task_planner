@@ -10,6 +10,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(humanoid_interfaces REQUIRED)
+find_package(gamecontroller REQUIRED)
 
 # for Lifecycle
 # find_package(rclcpp_lifecycle REQUIRED)
@@ -21,7 +22,7 @@ find_package(humanoid_interfaces REQUIRED)
 include_directories(include)
 
 add_executable(task_planner src/task_planner.cpp)
-ament_target_dependencies(task_planner rclcpp std_msgs humanoid_interfaces)
+ament_target_dependencies(task_planner rclcpp std_msgs humanoid_interfaces gamecontroller)
 
 install(TARGETS
   task_planner

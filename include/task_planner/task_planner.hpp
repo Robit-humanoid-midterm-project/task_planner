@@ -2,6 +2,8 @@
 
 #include "rclcpp/rclcpp.hpp"
 
+#include "gamecontroller/msg/gamecontroldata.hpp"
+
 #include "humanoid_interfaces/msg/master2_ik_msg.hpp"
 #include "humanoid_interfaces/msg/vision_data.hpp"
 #include "humanoid_interfaces/srv/global_scan_data.hpp"
@@ -9,6 +11,8 @@
 #include <algorithm>
 #include <deque>
 #include <vector>
+
+using controlData = gamecontroller::msg::Gamecontroldata;
 
 using M2Ik = humanoid_interfaces::msg::Master2IkMsg;
 using GlobalData = humanoid_interfaces::srv::GlobalScanData;
@@ -30,6 +34,11 @@ class TaskPlanner : public rclcpp::Node
 
     rclcpp::Subscription<VisionData>::SharedPtr VisionData_sub;
     void vision_data_topic_callback(const VisionData::SharedPtr msg);
+
+    rclcpp::Subscription<controlData>::SharedPtr ControlData_sub;
+    void control_data_callback(const controlData::SharedPtr msg);
+
+    int state = 0; // play: 3, finish: 4
 
     rclcpp::Publisher<M2Ik>::SharedPtr Master2Ik_pub;
 
