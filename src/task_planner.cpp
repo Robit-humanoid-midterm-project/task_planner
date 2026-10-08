@@ -31,7 +31,7 @@ TaskPlanner::TaskPlanner() : Node("task_planner")
     Master2Ik_pub = this->create_publisher<M2Ik>("master2ik", 10);
 
     timer_ =
-        this->create_wall_timer(std::chrono::milliseconds(1000 / 20), std::bind(&TaskPlanner::timer_callback, this));
+        this->create_wall_timer(std::chrono::milliseconds(1000 / 50), std::bind(&TaskPlanner::timer_callback, this));
 
     // request_global_data();
 }
@@ -212,15 +212,11 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
         return;
     }
 
-    double margin = 0.00;
     if (!is_detectived)
     {
-        // ob_detective_cnt = 0;
-        // ob_undetective_cnt++;
-
         if (cur_state == "L")
         {
-            if (camera_x < map_width - (close_std + margin) && camera_x >= 0)
+            if (camera_x < map_width - close_std && camera_x >= 0)
             {
                 forward();
                 return;
@@ -230,7 +226,7 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
         }
         else if (cur_state == "R")
         {
-            if (camera_x > (close_std + margin) && camera_x <= map_width)
+            if (camera_x > close_std && camera_x <= map_width)
             {
                 forward();
                 return;
@@ -243,13 +239,9 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
         return;
     }
 
-    // ob_undetective_cnt = 0;
-    // ob_detective_cnt++;
-
     if (is_detectived)
     {
-        float escape_std = 0.25;
-        // float last_dir_escape_std = 0.28;
+        float escape_std = 0.22;
         if (last_dir == -1)
         {
             if (dist[1] <= map_width && dist[1] > escape_std)
@@ -257,6 +249,7 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
                 last_dir = 0;
                 forward();
             }
+            left();
             return;
         }
         if (last_dir == 1)
@@ -266,6 +259,7 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
                 last_dir = 0;
                 forward();
             }
+            right();
             return;
         }
 
@@ -282,16 +276,40 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
 // state
 void TaskPlanner::update_state()
 {
+    // 상태 변경 시 정지
+    static std::string prev_state = "NONE";
+    static int pause_cnt = 0;
+    const int pause_period = 20;
+
+    if (prev_state == "NONE")
+        prev_state = cur_state;
+
+    if (cur_state != prev_state)
+    {
+        pause_cnt = pause_period;
+        prev_state = cur_state;
+    }
+
     M2Ik msg;
 
-    // temp
-    msg.x_length = x_length;
-    msg.y_length = y_length;
-    msg.yaw = yaw;
-    msg.flag = flag;
+    if (pause_cnt > 0)
+    {
+        pause_cnt--;
+        msg.x_length = 0.0;
+        msg.y_length = 0.0;
+        msg.yaw = 0.0;
+        msg.flag = 0;
+    }
+    else
+    {
+        msg.x_length = x_length;
+        msg.y_length = y_length;
+        msg.yaw = yaw;
+        msg.flag = flag;
+    }
 
-    RCLCPP_INFO(this->get_logger(), "x_speed: %.2f, y_speed: %.2f || x_position: %.3f, dist_x: %.2f || is_d: %d", msg.x_length, msg.y_length,
-                camera_x, dist_x, detectived);
+    RCLCPP_INFO(this->get_logger(), "x_speed: %.2f, y_speed: %.2f || x_position: %.3f, dist_x: %.2f || is_d: %d",
+                msg.x_length, msg.y_length, camera_x, dist_x, detectived);
 
     Master2Ik_pub->publish(msg);
 }
@@ -316,7 +334,7 @@ void TaskPlanner::backward()
 }
 void TaskPlanner::left()
 {
-    x_length = -1;
+    x_length = -0.2;
     // y_length = speed;
     // x_length = L_Test_x;
     y_length = L_Test_side;
@@ -326,7 +344,7 @@ void TaskPlanner::left()
 }
 void TaskPlanner::right()
 {
-    x_length = -1;
+    x_length = -0.2;
     // y_length = -speed;
     // x_length = R_Test_x;
     y_length = R_Test_side;
