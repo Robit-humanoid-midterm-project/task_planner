@@ -190,6 +190,7 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
     // 장애물이 가운데 하나 있으면서 다음 구간 장애물이 왼쪽 또는 오른쪽만 뚫려있는 경우 최단 경로
     // 다음 구간 장애물 인식 필요
     // 현재 구간 뒤에 있는 빨강+파랑 픽셀 수가 적은쪽으로 이동하는 방법
+    // TODO: vision 화면 최하단 중앙에 장애물 색이 있는지 없는지 bool값
 
     int is_detectived = dist[0] >= 0.01 && dist[0] <= 1.2;
 
