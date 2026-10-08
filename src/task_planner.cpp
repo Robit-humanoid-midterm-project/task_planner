@@ -247,6 +247,7 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
             {
                 last_dir = 0;
                 forward();
+                return;
             }
             left();
             return;
@@ -257,6 +258,7 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
             {
                 last_dir = 0;
                 forward();
+                return;
             }
             right();
             return;
@@ -269,6 +271,7 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
             if (dist_second_x >= -two_std && dist_second_x < 0)
             {
                 right();
+                last_dir = 1;
                 return;
             }
             left();
@@ -278,6 +281,7 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
             if (dist_second_x <= two_std && dist_second_x > 0)
             {
                 right();
+                last_dir = -1;
                 return;
             }
             right();
