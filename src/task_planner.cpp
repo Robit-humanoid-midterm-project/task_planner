@@ -240,7 +240,7 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
     if (is_detectived)
     {
         float escape_std = 0.22;
-        float last_dir_escape_std = 0.28;
+        float last_dir_escape_std = 0.32;
         if (last_dir == -1)
         {
             if (dist_x <= map_width && dist_x > last_dir_escape_std)
@@ -303,8 +303,8 @@ void TaskPlanner::update_state()
     msg.flag = flag;
     
 
-    RCLCPP_INFO(this->get_logger(), "x_speed: %.2f, y_speed: %.2f || x_position: %.3f, dist_x: %.2f || is_d: %d",
-                msg.x_length, msg.y_length, camera_x, dist_x, detectived);
+    RCLCPP_INFO(this->get_logger(), "x_speed: %.2f, y_speed: %.2f || x_position: %.3f, dist_x: %.2f, dist_2x: %.2f",
+                msg.x_length, msg.y_length, camera_x, dist_x, dist_second_x);
 
     Master2Ik_pub->publish(msg);
 }
