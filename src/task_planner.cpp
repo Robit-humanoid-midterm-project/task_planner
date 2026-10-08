@@ -192,7 +192,7 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
     // 현재 구간 뒤에 있는 빨강+파랑 픽셀 수가 적은쪽으로 이동하는 방법
     // TODO: vision 화면 최하단 중앙에 장애물 색이 있는지 없는지 bool값
 
-    int is_detectived = dist[0] >= 0.01 && dist[0] <= 1.14;
+    int is_detectived = dist[0] >= 0.01 && dist[0] <= 1.10;
     detectived = is_detectived;
 
     dist_x = dist[1];
@@ -248,7 +248,7 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
 
     if (is_detectived)
     {
-        float escape_std = 0.30;
+        float escape_std = 0.25;
         // float last_dir_escape_std = 0.28;
         if (last_dir == -1)
         {
