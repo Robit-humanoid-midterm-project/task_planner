@@ -75,8 +75,11 @@ class TaskPlanner : public rclcpp::Node
     // const int real_undetective_std = 1;
     std::string cur_state = "F"; // F, B, L, R, SS, S
 
+    double dist_x = 0;
+    int detectived = 0;
+
     double map_width = 1.4;
-    double close_std = 0.12;
+    double close_std = 0.20;
 
     // yaml에서 받아오기, + x, y, yaw min ~ max값
     double F_Max_Test_X = 40.0;

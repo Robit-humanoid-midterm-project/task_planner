@@ -7,7 +7,7 @@ TaskPlanner::TaskPlanner() : Node("task_planner")
     camera_x = left_x_1_dist;
     camera_y = declare_parameter<double>("start_y", 0.0);
     map_width = declare_parameter<double>("map_width", 1.4);
-    close_std = declare_parameter<double>("close_std", 0.12);
+    close_std = declare_parameter<double>("close_std", 0.20);
 
     F_Max_Test_X = declare_parameter<double>("F_Max_Test_X", 40.0);
     F_Min_Test_X = declare_parameter<double>("F_Min_Test_X", 30.0);
@@ -31,7 +31,7 @@ TaskPlanner::TaskPlanner() : Node("task_planner")
     Master2Ik_pub = this->create_publisher<M2Ik>("master2ik", 10);
 
     timer_ =
-        this->create_wall_timer(std::chrono::milliseconds(1000 / 50), std::bind(&TaskPlanner::timer_callback, this));
+        this->create_wall_timer(std::chrono::milliseconds(1000 / 20), std::bind(&TaskPlanner::timer_callback, this));
 
     // request_global_data();
 }
@@ -192,7 +192,10 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
     // 현재 구간 뒤에 있는 빨강+파랑 픽셀 수가 적은쪽으로 이동하는 방법
     // TODO: vision 화면 최하단 중앙에 장애물 색이 있는지 없는지 bool값
 
-    int is_detectived = dist[0] >= 0.01 && dist[0] <= 1.2;
+    int is_detectived = dist[0] >= 0.01 && dist[0] <= 1.14;
+    detectived = is_detectived;
+
+    dist_x = dist[1];
 
     if (camera_x < close_std && camera_x >= 0.0)
     {
@@ -209,7 +212,7 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
         return;
     }
 
-    double margin = 0.03;
+    double margin = 0.00;
     if (!is_detectived)
     {
         // ob_detective_cnt = 0;
@@ -245,7 +248,7 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
 
     if (is_detectived)
     {
-        float escape_std = 0.32;
+        float escape_std = 0.30;
         // float last_dir_escape_std = 0.28;
         if (last_dir == -1)
         {
@@ -287,8 +290,8 @@ void TaskPlanner::update_state()
     msg.yaw = yaw;
     msg.flag = flag;
 
-    RCLCPP_INFO(this->get_logger(), "x_speed: %.2f, y_speed: %.2f || x_position: %.3f", msg.x_length, msg.y_length,
-                camera_x);
+    RCLCPP_INFO(this->get_logger(), "x_speed: %.2f, y_speed: %.2f || x_position: %.3f, dist_x: %.2f || is_d: %d", msg.x_length, msg.y_length,
+                camera_x, dist_x, detectived);
 
     Master2Ik_pub->publish(msg);
 }
@@ -313,20 +316,20 @@ void TaskPlanner::backward()
 }
 void TaskPlanner::left()
 {
-    x_length = 0;
-    y_length = speed;
+    x_length = -1;
+    // y_length = speed;
     // x_length = L_Test_x;
-    // y_length = L_Test_side;
+    y_length = L_Test_side;
     yaw = 0;
     flag = 1;
     cur_state = "L";
 }
 void TaskPlanner::right()
 {
-    x_length = 0;
-    y_length = -speed;
+    x_length = -1;
+    // y_length = -speed;
     // x_length = R_Test_x;
-    // y_length = R_Test_side;
+    y_length = R_Test_side;
     yaw = 0;
     flag = 1;
     cur_state = "R";
