@@ -99,13 +99,14 @@ void TaskPlanner::vision_data_topic_callback(const VisionData::SharedPtr msg)
 void TaskPlanner::control_data_callback(const controlData::SharedPtr msg)
 {
     state = msg->state;
-    RCLCPP_INFO(this->get_logger(), "gamecontroller state: %d", state);
+    // RCLCPP_INFO(this->get_logger(), "gamecontroller state: %d", state);
 }
 // game controller data subscribe
 // ------------------------------
 
 void TaskPlanner::timer_callback() // temp
 {
+    RCLCPP_INFO(this->get_logger(), "cur state: %s", cur_state.c_str());
     if (state != 3)
     {
         stop();

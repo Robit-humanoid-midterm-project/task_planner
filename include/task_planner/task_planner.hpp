@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <deque>
+#include <string>
 #include <vector>
 
 using controlData = gamecontroller::msg::Gamecontroldata;
