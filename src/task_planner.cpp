@@ -159,43 +159,40 @@ void TaskPlanner::get_position()
     camera_x = temp[2];
 }
 
-// vision 내에 인식되는 장애물 중 가장 가까운 obstacle 반환
-std::array<double, 2> TaskPlanner::get_closest_obstacle()
+// vision 내에 인식되는 장애물 중 가장 가까운 순서대로 obstacle 반환
+std::array<std::array<double, 2>, 3> TaskPlanner::get_closest_obstacle()
 {
-    std::array<std::array<double, 2>, 3> raw_obstacles = {obstacle_1, obstacle_2, obstacle_3};
+    std::array<std::array<double, 2>, 3> obstacles = {obstacle_1, obstacle_2, obstacle_3};
 
-    double min_distance = 9999.0;
-    std::array<double, 2> closest_obstacle = {-1000.0, -1000.0};
+    std::sort(obstacles.begin(), obstacles.end(), [](const std::array<double, 2> &a, const std::array<double, 2> &b) {
+        // 유효한 데이터인지 확인
+        bool valid_a = (a[0] > -999.0 && a[1] > -999.0);
+        bool valid_b = (b[0] > -999.0 && b[1] > -999.0);
 
-    for (const auto &obs : raw_obstacles)
-    {
-        if (obs[0] <= -999.0 || obs[1] <= -999.0)
-            continue;
+        if (valid_a && valid_b)
+            return std::hypot(a[0], a[1]) < std::hypot(b[0], b[1]);
+        else if (valid_a)
+            return true;
+        else if (valid_b)
+            return false;
+        else
+            return false;
+    });
 
-        // hypot(x, y): 유클라디안(피타고라스) 거리
-        double distance = std::hypot(obs[1], obs[0]);
-
-        if (distance < min_distance)
-        {
-            min_distance = distance;
-            closest_obstacle = obs;
-        }
-    }
-    // RCLCPP_INFO(this->get_logger(), "y_dist: %.2f, x_dist: %.2f", closest_obstacle[0], closest_obstacle[1]);
-    return closest_obstacle;
+    return obstacles;
 }
 
-void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
+void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
 {
-    // 장애물이 가운데 하나 있으면서 다음 구간 장애물이 왼쪽 또는 오른쪽만 뚫려있는 경우 최단 경로
-    // 다음 구간 장애물 인식 필요
+    // 최단 경로로 가기 위해서 다음 구간 장애물 인식 필요
     // 현재 구간 뒤에 있는 빨강+파랑 픽셀 수가 적은쪽으로 이동하는 방법
     // TODO: vision 화면 최하단 중앙에 장애물 색이 있는지 없는지 bool값
 
-    int is_detectived = dist[0] >= 0.01 && dist[0] <= 1.10;
-    detectived = is_detectived;
+    int is_detectived = dist[0][0] >= 0.01 && dist[0][0] <= 1.10;
 
-    dist_x = dist[1];
+    detectived = is_detectived;
+    dist_x = dist[0][1];
+    dist_second_x = dist[1][1];
 
     if (camera_x < close_std && camera_x >= 0.0)
     {
@@ -214,6 +211,7 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
 
     if (!is_detectived)
     {
+        last_dir = 0;
         if (cur_state == "L")
         {
             if (camera_x < map_width - close_std && camera_x >= 0)
@@ -242,9 +240,10 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
     if (is_detectived)
     {
         float escape_std = 0.22;
+        float last_dir_escape_std = 0.28;
         if (last_dir == -1)
         {
-            if (dist[1] <= map_width && dist[1] > escape_std)
+            if (dist_x <= map_width && dist_x > last_dir_escape_std)
             {
                 last_dir = 0;
                 forward();
@@ -254,7 +253,7 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
         }
         if (last_dir == 1)
         {
-            if (dist[1] >= -map_width && dist[1] < -escape_std)
+            if (dist_x >= -map_width && dist_x < -last_dir_escape_std)
             {
                 last_dir = 0;
                 forward();
@@ -263,10 +262,24 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
             return;
         }
 
-        if (dist[1] >= 0 && dist[1] < escape_std)
+        double two_std = 0.55;
+        if (dist_x >= 0 && dist_x < escape_std)
+        {
+            // 2개 연속 && 2개 다 인식된 경우 빈 곳으로 이동
+            if (dist_second_x >= -two_std && dist_second_x < 0)
+            {
+                right();
+                return;
+            }
             left();
-        else if (dist[1] < 0 && dist[1] >= -escape_std)
-            right();
+        }
+        else if (dist_x < 0 && dist_x >= -escape_std)
+            if (dist_second_x <= two_std && dist_second_x > 0)
+            {
+                right();
+                return;
+            }
+        right();
     }
     else
         forward();

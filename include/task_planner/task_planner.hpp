@@ -49,8 +49,8 @@ class TaskPlanner : public rclcpp::Node
     void get_position();
     std::deque<double> buffer;
     long unsigned int window_size = 5;
-    std::array<double, 2> get_closest_obstacle();
-    void test_vision_walk(std::array<double, 2> dist);
+    std::array<std::array<double, 2>, 3> get_closest_obstacle();
+    void test_vision_walk(std::array<std::array<double, 2>, 3> dist);
     int last_dir = 0; // -1 0 1 (L, 0, R)
 
     double speed = 20.0;
@@ -65,23 +65,16 @@ class TaskPlanner : public rclcpp::Node
     void play();
     void stop();
 
-    // int phase = 1;                                     // 1: 0 ~ 1.5m, 2: 1.5 ~ 3m, 3: 3 ~ 4.5m, 4: 4.5 ~ 6m
-    // int x_position = 4;                                // 좌: 2, 중: 4, 우: 6 ,사잇값:1, 3, 5, 7
-    // std::array<double, 2> current_position = {0, 0.7}; // (y, x)
-
-    // int ob_detective_cnt = 0;
-    // int ob_undetective_cnt = 0;
-    // const int real_detective_std = 1; // 1일 때 로직 작동 x
-    // const int real_undetective_std = 1;
     std::string cur_state = "F"; // F, B, L, R, SS, S
 
     double dist_x = 0;
+    double dist_second_x = 0;
     int detectived = 0;
 
     double map_width = 1.4;
     double close_std = 0.20;
 
-    // yaml에서 받아오기, + x, y, yaw min ~ max값
+    // yaml에서 받아오기, +x, y, yaw값
     double F_Max_Test_X = 40.0;
     double F_Min_Test_X = 30.0;
 
