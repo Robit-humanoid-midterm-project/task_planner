@@ -209,48 +209,66 @@ void TaskPlanner::test_vision_walk(std::array<double, 2> dist)
         return;
     }
 
+    double margin = 0.03;
     if (!is_detectived)
     {
-        ob_detective_cnt = 0;
-        ob_undetective_cnt++;
+        // ob_detective_cnt = 0;
+        // ob_undetective_cnt++;
 
-        if (ob_undetective_cnt < real_undetective_std)
+        if (cur_state == "L")
         {
-            if (cur_state == "L")
-                left();
-            else if (cur_state == "R")
-                right();
+            if (camera_x < map_width - (close_std + margin) && camera_x >= 0)
+            {
+                forward();
+                return;
+            }
+            left();
+            return;
         }
-        else
-            forward();
+        else if (cur_state == "R")
+        {
+            if (camera_x > (close_std + margin) && camera_x <= map_width)
+            {
+                forward();
+                return;
+            }
+            right();
+            return;
+        }
 
+        forward();
         return;
     }
 
-    ob_undetective_cnt = 0;
-    ob_detective_cnt++;
+    // ob_undetective_cnt = 0;
+    // ob_detective_cnt++;
 
-    if (ob_detective_cnt > real_detective_std)
+    if (is_detectived)
     {
-        // TODO: 가운데에서 장애물 2개 사이 진동하는 경우 필터링 필요
-        float last_dir_escape_std = 0.28;
+        float escape_std = 0.32;
+        // float last_dir_escape_std = 0.28;
         if (last_dir == -1)
         {
-            if (dist[1] <= map_width && dist[1] > last_dir_escape_std)
+            if (dist[1] <= map_width && dist[1] > escape_std)
+            {
                 last_dir = 0;
+                forward();
+            }
             return;
         }
         if (last_dir == 1)
         {
-            if (dist[1] >= -map_width && dist[1] < -last_dir_escape_std)
+            if (dist[1] >= -map_width && dist[1] < -escape_std)
+            {
                 last_dir = 0;
+                forward();
+            }
             return;
         }
 
-        float escape_std = 0.32;
         if (dist[1] >= 0 && dist[1] < escape_std)
             left();
-        else if (dist[1] < 0 && dist[1] > -escape_std)
+        else if (dist[1] < 0 && dist[1] >= -escape_std)
             right();
     }
     else

@@ -69,10 +69,10 @@ class TaskPlanner : public rclcpp::Node
     // int x_position = 4;                                // 좌: 2, 중: 4, 우: 6 ,사잇값:1, 3, 5, 7
     // std::array<double, 2> current_position = {0, 0.7}; // (y, x)
 
-    int ob_detective_cnt = 0;
-    int ob_undetective_cnt = 0;
-    const int real_detective_std = 1; // 1일 때 로직 작동 x
-    const int real_undetective_std = 1;
+    // int ob_detective_cnt = 0;
+    // int ob_undetective_cnt = 0;
+    // const int real_detective_std = 1; // 1일 때 로직 작동 x
+    // const int real_undetective_std = 1;
     std::string cur_state = "F"; // F, B, L, R, SS, S
 
     double map_width = 1.4;
