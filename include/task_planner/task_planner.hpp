@@ -71,6 +71,8 @@ class TaskPlanner : public rclcpp::Node
     double dist_second_x = 0;
     int detectived = 0;
 
+    int ob_undetective_cnt = 0;
+
     double map_width = 1.4;
     double close_std = 0.20;
 

@@ -31,7 +31,7 @@ TaskPlanner::TaskPlanner() : Node("task_planner")
     Master2Ik_pub = this->create_publisher<M2Ik>("master2ik", 10);
 
     timer_ =
-        this->create_wall_timer(std::chrono::milliseconds(1000 / 50), std::bind(&TaskPlanner::timer_callback, this));
+        this->create_wall_timer(std::chrono::milliseconds(1000 / 20), std::bind(&TaskPlanner::timer_callback, this));
 
     // request_global_data();
 }
@@ -211,6 +211,11 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
 
     if (!is_detectived)
     {
+
+        ob_undetective_cnt++;
+
+        if (ob_undetective_cnt > 2 || last_dir != 0)
+        {
         last_dir = 0;
         if (cur_state == "L")
         {
@@ -235,7 +240,9 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
 
         forward();
         return;
-    }
+    }}
+
+    ob_undetective_cnt = 0;
 
     if (is_detectived)
     {
