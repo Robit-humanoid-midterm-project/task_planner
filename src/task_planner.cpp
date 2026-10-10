@@ -229,32 +229,32 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
         double center_ratio = obstacle_ratio[1];
         double left_ratio = obstacle_ratio[0];
         double right_ratio = obstacle_ratio[2];
-        if (center_ratio >= 0.1)
-            if (left_ratio >= 0.5 && right_ratio < 0.1) // 왼쪽+중앙 장애물(vision 기준)
-            {
-                right();
-                return;
-                // if (camera_x >= 0 && camera_x < map_width / 3) // 좌측
-                // {
-                //     right();
-                //     return;
-                // }
-                // else if (camera_x >= map_width / 3 && camera_x < map_width * 2 / 3) // 중앙
-                // {
-                //     right();
-                //     return;
-                // }
-                // else if (camera_x >= map_width * 2 / 3 && camera_x <= map_width) // 우측
-                // {
-                //     right();
-                //     return;
-                // }
-            }
-            else if (right_ratio >= 0.5 && left_ratio < 0.1) // 중앙+오른쪽 장애물(vision 기준)
-            {
-                left();
-                return;
-            }
+        // if (center_ratio >= 0.1)
+        if (center_ratio >= 0.1 && left_ratio >= 0.5 && right_ratio < 0.1) // 왼쪽+중앙 장애물(vision 기준)
+        {
+            right();
+            return;
+            // if (camera_x >= 0 && camera_x < map_width / 3) // 좌측
+            // {
+            //     right();
+            //     return;
+            // }
+            // else if (camera_x >= map_width / 3 && camera_x < map_width * 2 / 3) // 중앙
+            // {
+            //     right();
+            //     return;
+            // }
+            // else if (camera_x >= map_width * 2 / 3 && camera_x <= map_width) // 우측
+            // {
+            //     right();
+            //     return;
+            // }
+        }
+        else if (center_ratio >= 0.05 && right_ratio >= 0.5 && left_ratio < 0.1) // 중앙+오른쪽 장애물(vision 기준)
+        {
+            left();
+            return;
+        }
 
         ob_undetective_cnt++;
 
