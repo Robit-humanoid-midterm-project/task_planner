@@ -189,10 +189,6 @@ std::array<std::array<double, 2>, 3> TaskPlanner::get_closest_obstacle()
 
 void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
 {
-    // 최단 경로로 가기 위해서 다음 구간 장애물 인식 필요
-    // 현재 구간 뒤에 있는 빨강+파랑 픽셀 수가 적은쪽으로 이동하는 방법
-    // TODO: vision 화면 최하단 중앙에 장애물 색이 있는지 없는지 bool값
-
     int is_detectived = dist[0][0] >= 0.01 && dist[0][0] <= 1.10;
 
     dist_x = dist[0][1];
@@ -213,6 +209,17 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
             last_dir = -1;
         return;
     }
+
+    // 2순위 판별: 최하단 픽셀 판단
+    // TODO: 최하단 픽셀 로직 짜기
+    // double center_ratio = obstacle_ratio[1];
+    // if (center_ratio >= 0.75)
+    //     if (camera_x >= 0 && camera_x < map_width / 3) // 좌측
+    //         return;
+    //     else if (camera_x >= map_width / 3 && camera_x < map_width * 2 / 3) // 중앙
+    //         return;
+    //     else if (camera_x >= map_width * 2 / 3 && camera_x <= map_width) // 우측
+    //         return;
 
     if (!is_detectived)
     {
@@ -320,8 +327,11 @@ void TaskPlanner::update_state()
     msg.yaw = yaw;
     msg.flag = flag;
 
-    RCLCPP_INFO(this->get_logger(), "x_speed: %.2f, y_speed: %.2f || x_position: %.3f, dist_x: %.2f, dist_2x: %.2f",
-                msg.x_length, msg.y_length, camera_x, dist_x, dist_second_x);
+    RCLCPP_INFO(
+        this->get_logger(),
+        "x_speed: %.2f, y_speed: %.2f || x_position: %.3f, dist_x: %.2f, dist_2x: %.2f || l: %.2f, c: %.2f, r: %.2f",
+        msg.x_length, msg.y_length, camera_x, dist_x, dist_second_x, obstacle_ratio[0], obstacle_ratio[1],
+        obstacle_ratio[2]);
 
     Master2Ik_pub->publish(msg);
 }
