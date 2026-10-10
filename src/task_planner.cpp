@@ -141,7 +141,7 @@ void TaskPlanner::timer_callback() // temp
 
     if (stabilizing_cnt > 0)
     {
-        standstill();
+        stop();
         stabilizing_cnt--;
     }
     update_state();
