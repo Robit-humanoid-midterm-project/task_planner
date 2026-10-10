@@ -69,6 +69,8 @@ class TaskPlanner : public rclcpp::Node
 
     int stabilizing_cnt = 0;
 
+    int ratio_cnt = 0;
+
     double dist_x = 0;
     double dist_second_x = 0;
     int detectived = 0;
@@ -76,7 +78,7 @@ class TaskPlanner : public rclcpp::Node
     int ob_undetective_cnt = 0;
 
     double map_width = 1.4;
-    double close_std = 0.20;
+    double close_std = 0.18;
 
     // yaml에서 받아오기, +x, y, yaw값
     double F_Max_Test_X = 40.0;

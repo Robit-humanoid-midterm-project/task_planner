@@ -2,7 +2,7 @@
   ros__parameters:
     # float
     map_width: 1.4
-    close_std: 0.20
+    close_std: 0.18
     start_x: 0.7
     start_y: 0.0
     speed: 20.0
@@ -20,11 +20,11 @@
     B_Test_Yaw: 0.00
 
     #왼쪽 수평 이동
-    L_Test_x: 4.50
-    L_Test_side: 10.00
+    L_Test_x: -2.5
+    L_Test_side: 3.50
     L_Test_Yaw: 0.00
 
     #오른쪽 수평 이동
-    R_Test_x: 4.50
-    R_Test_side: -10.00
+    R_Test_x: 0.5
+    R_Test_side: -4.0
     R_Test_Yaw: 0.00

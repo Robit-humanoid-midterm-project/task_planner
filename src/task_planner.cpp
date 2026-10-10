@@ -7,18 +7,18 @@ TaskPlanner::TaskPlanner() : Node("task_planner")
     camera_x = left_x_1_dist;
     camera_y = declare_parameter<double>("start_y", 0.0);
     map_width = declare_parameter<double>("map_width", 1.4);
-    close_std = declare_parameter<double>("close_std", 0.20);
+    close_std = declare_parameter<double>("close_std", 0.18);
 
     F_Max_Test_X = declare_parameter<double>("F_Max_Test_X", 40.0);
     F_Min_Test_X = declare_parameter<double>("F_Min_Test_X", 30.0);
 
     B_Test_x = declare_parameter<double>("B_Test_x", -15.0);
 
-    L_Test_x = declare_parameter<double>("L_Test_x", 4.5);
-    L_Test_side = declare_parameter<double>("L_Test_side", 10.0);
+    L_Test_x = declare_parameter<double>("L_Test_x", -2.5);
+    L_Test_side = declare_parameter<double>("L_Test_side", 3.5);
 
-    R_Test_x = declare_parameter<double>("R_Test_x", 4.5);
-    R_Test_side = declare_parameter<double>("R_Test_side", -10.0);
+    R_Test_x = declare_parameter<double>("R_Test_x", 0.5);
+    R_Test_side = declare_parameter<double>("R_Test_side", -3.5);
 
     // GlobalData_client = this->create_client<GlobalData>("vision_node"); // vision node 이름
 
@@ -137,7 +137,7 @@ void TaskPlanner::timer_callback() // temp
     test_vision_walk(get_closest_obstacle());
 
     if ((prev_state == "L" && cur_state == "R") || (prev_state == "R" && cur_state == "L"))
-        stabilizing_cnt = 5;
+        stabilizing_cnt = 6;
 
     if (stabilizing_cnt > 0)
     {
@@ -210,6 +210,7 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
     // 1순위 판별: 양쪽 라인
     if (camera_x < close_std && camera_x >= 0.0)
     {
+        ratio_cnt = 0;
         right();
         if (is_detectived)
             last_dir = 1;
@@ -217,6 +218,7 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
     }
     else if (camera_x > map_width - close_std && camera_x <= map_width)
     {
+        ratio_cnt = 0;
         left();
         if (is_detectived)
             last_dir = -1;
@@ -230,8 +232,9 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
         double left_ratio = obstacle_ratio[0];
         double right_ratio = obstacle_ratio[2];
         // if (center_ratio >= 0.1)
-        if (center_ratio >= 0.1 && left_ratio >= 0.5 && right_ratio < 0.1) // 왼쪽+중앙 장애물(vision 기준)
+        if ((center_ratio >= 0.01 && left_ratio >= 0.5 && right_ratio < 0.2)) // 왼쪽+중앙 장애물(vision 기준)
         {
+            ratio_cnt = 10;
             right();
             return;
             // if (camera_x >= 0 && camera_x < map_width / 3) // 좌측
@@ -250,9 +253,16 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
             //     return;
             // }
         }
-        else if (center_ratio >= 0.05 && right_ratio >= 0.5 && left_ratio < 0.1) // 중앙+오른쪽 장애물(vision 기준)
+        else if ((center_ratio >= 0.01 && right_ratio >= 0.5 && left_ratio < 0.2)) // 중앙+오른쪽 장애물(vision 기준)
         {
+            ratio_cnt = 10;
             left();
+            return;
+        }
+
+        if(ratio_cnt > 0)
+        {
+            ratio_cnt--;
             return;
         }
 
@@ -261,26 +271,26 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
         if (ob_undetective_cnt > 2 || last_dir != 0)
         {
             last_dir = 0;
-            if (cur_state == "L")
-            {
-                if (camera_x < map_width - close_std && camera_x >= 0)
-                {
-                    forward();
-                    return;
-                }
-                left();
-                return;
-            }
-            else if (cur_state == "R")
-            {
-                if (camera_x > close_std && camera_x <= map_width)
-                {
-                    forward();
-                    return;
-                }
-                right();
-                return;
-            }
+            // if (cur_state == "L")
+            // {
+            //     if (camera_x < map_width - close_std && camera_x >= 0)
+            //     {
+            //         forward();
+            //         return;
+            //     }
+            //     left();
+            //     return;
+            // }
+            // else if (cur_state == "R")
+            // {
+            //     if (camera_x > close_std && camera_x <= map_width)
+            //     {
+            //         forward();
+            //         return;
+            //     }
+            //     right();
+            //     return;
+            // }
 
             forward();
             return;
@@ -342,8 +352,6 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
             right();
         }
     }
-    else
-        forward();
 }
 
 // -----
@@ -386,9 +394,9 @@ void TaskPlanner::backward()
 }
 void TaskPlanner::left()
 {
-    x_length = -0.2;
+    // x_length = -0.2;
     // y_length = speed;
-    // x_length = L_Test_x;
+    x_length = L_Test_x;
     y_length = L_Test_side;
     yaw = 0;
     flag = 1;
@@ -396,9 +404,9 @@ void TaskPlanner::left()
 }
 void TaskPlanner::right()
 {
-    x_length = -0.2;
+    // x_length = -0.2;
     // y_length = -speed;
-    // x_length = R_Test_x;
+    x_length = R_Test_x;
     y_length = R_Test_side;
     yaw = 0;
     flag = 1;
