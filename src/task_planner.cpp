@@ -189,6 +189,7 @@ std::array<std::array<double, 2>, 3> TaskPlanner::get_closest_obstacle()
 
 void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
 {
+    // TODO: 좌 -> 우, 우 -> 좌일 때 흔들리는 것 같음 로직 수정하기
     int is_detectived = dist[0][0] >= 0.01 && dist[0][0] <= 1.10;
 
     dist_x = dist[0][1];
@@ -226,7 +227,7 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
 
         ob_undetective_cnt++;
 
-        if (ob_undetective_cnt > 3 || last_dir != 0)
+        if (ob_undetective_cnt > 2 || last_dir != 0)
         {
             last_dir = 0;
             if (cur_state == "L")
@@ -253,8 +254,6 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
             forward();
             return;
         }
-        else
-            standstill(); // 넘어짐 방지 (TODO: test 해봐야 함)
 
         return;
     }
