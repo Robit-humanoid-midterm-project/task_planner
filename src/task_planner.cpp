@@ -201,7 +201,6 @@ std::array<std::array<double, 2>, 3> TaskPlanner::get_closest_obstacle()
 
 void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
 {
-    // TODO: 좌 -> 우, 우 -> 좌일 때 흔들리는 것 같음 로직 수정하기
     int is_detectived = dist[0][0] >= 0.01 && dist[0][0] <= 1.10;
 
     dist_x = dist[0][1];
@@ -227,7 +226,6 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
 
     if (!is_detectived)
     {
-        // TODO: 최하단 픽셀 로직 짜기
         double center_ratio = obstacle_ratio[1];
         double left_ratio = obstacle_ratio[0];
         double right_ratio = obstacle_ratio[2];
@@ -260,7 +258,7 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
             return;
         }
 
-        if(ratio_cnt > 0)
+        if (ratio_cnt > 0)
         {
             ratio_cnt--;
             return;
