@@ -131,7 +131,19 @@ void TaskPlanner::timer_callback() // temp
     //----------------------------------------------------------
 
     get_position();
+
+    std::string prev_state = cur_state;
+
     test_vision_walk(get_closest_obstacle());
+
+    if ((prev_state == "L" && cur_state == "R") || (prev_state == "R" && cur_state == "L"))
+        stabilizing_cnt = 5;
+
+    if (stabilizing_cnt > 0)
+    {
+        standstill();
+        stabilizing_cnt--;
+    }
     update_state();
 
     //----------------------------------------------------------

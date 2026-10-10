@@ -67,6 +67,8 @@ class TaskPlanner : public rclcpp::Node
 
     std::string cur_state = "F"; // F, B, L, R, SS, S
 
+    int stabilizing_cnt = 0;
+
     double dist_x = 0;
     double dist_second_x = 0;
     int detectived = 0;
