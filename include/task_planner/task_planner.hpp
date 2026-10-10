@@ -124,6 +124,7 @@ class TaskPlanner : public rclcpp::Node
     std::array<double, 2> obstacle_3{0.0, 0.0};
 
     // double confidence = 0.0;
+    std::array<double, 3> obstacle_ratio{0.0, 0.0, 0.0};
     // Vision Data
     // -----------
 };

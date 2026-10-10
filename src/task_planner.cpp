@@ -20,7 +20,7 @@ TaskPlanner::TaskPlanner() : Node("task_planner")
     R_Test_x = declare_parameter<double>("R_Test_x", 4.5);
     R_Test_side = declare_parameter<double>("R_Test_side", -10.0);
 
-    GlobalData_client = this->create_client<GlobalData>("vision_node"); // vision node 이름
+    // GlobalData_client = this->create_client<GlobalData>("vision_node"); // vision node 이름
 
     VisionData_sub = this->create_subscription<VisionData>(
         "vision2master", 10, std::bind(&TaskPlanner::vision_data_topic_callback, this, std::placeholders::_1));
@@ -32,6 +32,7 @@ TaskPlanner::TaskPlanner() : Node("task_planner")
 
     timer_ =
         this->create_wall_timer(std::chrono::milliseconds(1000 / 20), std::bind(&TaskPlanner::timer_callback, this));
+    // TODO: 리팩토링 할 때 Hz parameter로 빼기, +토픽 이름도
 
     // request_global_data();
 }
@@ -101,6 +102,7 @@ void TaskPlanner::vision_data_topic_callback(const VisionData::SharedPtr msg)
     obstacle_3 = msg->obstacle_3;
 
     // confidence = msg->confidence;
+    obstacle_ratio = msg->obstacle_ratio;
 }
 // vision data subscribe
 // ---------------------
@@ -118,7 +120,7 @@ void TaskPlanner::control_data_callback(const controlData::SharedPtr msg)
 void TaskPlanner::timer_callback() // temp
 {
     // RCLCPP_INFO(this->get_logger(), "cur state: %s", cur_state.c_str());
-    if (state != 3)
+    if (state != 3) // game controller state: playing
     {
         stop();
         update_state();
@@ -140,9 +142,12 @@ void TaskPlanner::timer_callback() // temp
         RCLCPP_WARN(this->get_logger(), "Timer callback delay: %ld us", duration);
 }
 
-// lastest position get
+// lastest position get, 최신 값 5개의 중앙값을 사용
 void TaskPlanner::get_position()
 {
+    if (left_x_1_dist < -999.0)
+        return;
+
     buffer.push_back(left_x_1_dist);
     if (buffer.size() > window_size)
         buffer.pop_front();
@@ -190,10 +195,10 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
 
     int is_detectived = dist[0][0] >= 0.01 && dist[0][0] <= 1.10;
 
-    detectived = is_detectived;
     dist_x = dist[0][1];
     dist_second_x = dist[1][1];
 
+    // 1순위 판별: 양쪽 라인
     if (camera_x < close_std && camera_x >= 0.0)
     {
         right();
@@ -214,33 +219,38 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
 
         ob_undetective_cnt++;
 
-        if (ob_undetective_cnt > 2 || last_dir != 0)
+        if (ob_undetective_cnt > 3 || last_dir != 0)
         {
-        last_dir = 0;
-        if (cur_state == "L")
-        {
-            if (camera_x < map_width - close_std && camera_x >= 0)
+            last_dir = 0;
+            if (cur_state == "L")
             {
-                forward();
+                if (camera_x < map_width - close_std && camera_x >= 0)
+                {
+                    forward();
+                    return;
+                }
+                left();
                 return;
             }
-            left();
-            return;
-        }
-        else if (cur_state == "R")
-        {
-            if (camera_x > close_std && camera_x <= map_width)
+            else if (cur_state == "R")
             {
-                forward();
+                if (camera_x > close_std && camera_x <= map_width)
+                {
+                    forward();
+                    return;
+                }
+                right();
                 return;
             }
-            right();
-            return;
-        }
 
-        forward();
+            forward();
+            return;
+        }
+        else
+            standstill(); // 넘어짐 방지 (TODO: test 해봐야 함)
+
         return;
-    }}
+    }
 
     ob_undetective_cnt = 0;
 
@@ -275,6 +285,7 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
         if (dist_x >= 0 && dist_x < escape_std)
         {
             // 2개 연속 && 2개 다 인식된 경우 빈 곳으로 이동
+            // 정확히는 2개를 하나의 객체처럼 판단해서 2개 연속된 장애물의 중앙을 기준으로 적게 이동하는 쪽으로 움직임
             if (dist_second_x >= -two_std && dist_second_x < 0)
             {
                 right();
@@ -308,7 +319,6 @@ void TaskPlanner::update_state()
     msg.y_length = y_length;
     msg.yaw = yaw;
     msg.flag = flag;
-    
 
     RCLCPP_INFO(this->get_logger(), "x_speed: %.2f, y_speed: %.2f || x_position: %.3f, dist_x: %.2f, dist_2x: %.2f",
                 msg.x_length, msg.y_length, camera_x, dist_x, dist_second_x);
