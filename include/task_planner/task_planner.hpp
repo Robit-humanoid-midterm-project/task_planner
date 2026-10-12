@@ -77,6 +77,8 @@ class TaskPlanner : public rclcpp::Node
 
     int ob_undetective_cnt = 0;
 
+    int color_undetective_cnt = 0;
+
     double map_width = 1.4;
     double close_std = 0.18;
 
@@ -129,6 +131,8 @@ class TaskPlanner : public rclcpp::Node
 
     // double confidence = 0.0;
     std::array<double, 3> obstacle_ratio{0.0, 0.0, 0.0};
+
+    double isRedBlue = 1.0;
     // Vision Data
     // -----------
 };

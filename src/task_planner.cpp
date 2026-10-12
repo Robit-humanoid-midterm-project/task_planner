@@ -103,6 +103,8 @@ void TaskPlanner::vision_data_topic_callback(const VisionData::SharedPtr msg)
 
     // confidence = msg->confidence;
     obstacle_ratio = msg->obstacle_ratio;
+
+    isRedBlue = msg->isredblue;
 }
 // vision data subscribe
 // ---------------------
@@ -144,6 +146,17 @@ void TaskPlanner::timer_callback() // temp
         stop();
         stabilizing_cnt--;
     }
+    if (isRedBlue == 0)
+    {
+        color_undetective_cnt++;
+        if (color_undetective_cnt > 60)
+            if (camera_x < map_width / 3 && camera_x >= 0)
+                y_length = -1;
+            else if (camera_x > map_width * 2 / 3 && camera_x <= map_width)
+                y_length = 1;
+    }
+    else
+        color_undetective_cnt = 0;
     update_state();
 
     //----------------------------------------------------------
@@ -235,21 +248,6 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
             ratio_cnt = 10;
             right();
             return;
-            // if (camera_x >= 0 && camera_x < map_width / 3) // 좌측
-            // {
-            //     right();
-            //     return;
-            // }
-            // else if (camera_x >= map_width / 3 && camera_x < map_width * 2 / 3) // 중앙
-            // {
-            //     right();
-            //     return;
-            // }
-            // else if (camera_x >= map_width * 2 / 3 && camera_x <= map_width) // 우측
-            // {
-            //     right();
-            //     return;
-            // }
         }
         else if ((center_ratio >= 0.01 && right_ratio >= 0.5 && left_ratio < 0.2)) // 중앙+오른쪽 장애물(vision 기준)
         {
@@ -269,27 +267,6 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
         if (ob_undetective_cnt > 2 || last_dir != 0)
         {
             last_dir = 0;
-            // if (cur_state == "L")
-            // {
-            //     if (camera_x < map_width - close_std && camera_x >= 0)
-            //     {
-            //         forward();
-            //         return;
-            //     }
-            //     left();
-            //     return;
-            // }
-            // else if (cur_state == "R")
-            // {
-            //     if (camera_x > close_std && camera_x <= map_width)
-            //     {
-            //         forward();
-            //         return;
-            //     }
-            //     right();
-            //     return;
-            // }
-
             forward();
             return;
         }
