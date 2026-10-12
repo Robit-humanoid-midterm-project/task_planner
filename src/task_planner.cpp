@@ -311,24 +311,76 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
 
         if (dist_x >= 0 && dist_x < escape_std)
         {
-            // 2개 연속 && 2개 다 인식된 경우 빈 곳으로 이동
-            // 정확히는 2개를 하나의 객체처럼 판단해서 2개 연속된 장애물의 중앙을 기준으로 적게 이동하는 쪽으로 움직임
+            // 첫번째 장애물이 중앙에서 오른쪽에 위치하면서, 두번째 가까운 장애물이 첫번째 장애물의 왼쪽에 있을 때
             if (dist_second_x >= -two_std && dist_second_x < 0)
             {
-                right();
-                last_dir = 1;
-                return;
+                if (camera_x < map_width * 2 / 3 && camera_x >= 0)
+                {
+                    right();
+                    last_dir = 1;
+                    return;
+                }
+                else if (camera_x >= map_width * 2 / 3 && camera_x <= map_width)
+                {
+                    left();
+                    last_dir = -1;
+                    return;
+                }
             }
+            // 첫번째 장애물이 중앙에서 오른쪽에 위치하면서, 두번째 가까운 장애물이 첫번째 장애물의 오른쪽에 있을 때
+            else if (dist_second_x <= two_std && dist_second_x >= 0)
+            {
+                if (camera_x < map_width / 3 && camera_x >= 0)
+                {
+                    right();
+                    last_dir = 1;
+                    return;
+                }
+                else if (camera_x >= map_width / 3 && camera_x <= map_width)
+                {
+                    left();
+                    last_dir = -1;
+                    return;
+                }
+            }
+            // 1개만 인식한 경우
             left();
         }
         else if (dist_x < 0 && dist_x >= -escape_std)
         {
-            if (dist_second_x <= two_std && dist_second_x > 0)
+            // 첫번째 장애물이 중앙에서 왼쪽에 위치하면서, 두번째 가까운 장애물이 첫번째 장애물의 왼쪽에 있을 때
+            if (dist_second_x >= -two_std && dist_second_x < 0)
             {
-                right();
-                last_dir = -1;
-                return;
+                if (camera_x < map_width * 2 / 3 && camera_x >= 0)
+                {
+                    right();
+                    last_dir = 1;
+                    return;
+                }
+                else if (camera_x >= map_width * 2 / 3 && camera_x <= map_width)
+                {
+                    left();
+                    last_dir = -1;
+                    return;
+                }
             }
+            // 첫번째 장애물이 중앙에서 왼쪽에 위치하면서, 두번째 가까운 장애물이 첫번째 장애물의 오른쪽에 있을 때
+            else if (dist_second_x <= two_std && dist_second_x >= 0)
+            {
+                if (camera_x < map_width / 3 && camera_x >= 0)
+                {
+                    right();
+                    last_dir = 1;
+                    return;
+                }
+                else if (camera_x >= map_width / 3 && camera_x <= map_width)
+                {
+                    left();
+                    last_dir = -1;
+                    return;
+                }
+            }
+            // 1개만 인식한 경우
             right();
         }
     }
