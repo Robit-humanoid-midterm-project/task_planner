@@ -1,13 +1,22 @@
 /**:
   ros__parameters:
-    # float
     map_width: 1.4
+
     close_std: 0.18
+    escape_std: 0.22
+    last_dir_escape_std: 0.32
+    two_std: 0.55
+
     start_x: 0.7
     start_y: 0.0
-    speed: 20.0
 
-    # TODO: 해당 값으로 보행 되는지 확인 필요
+    Hz: 20
+
+    vision2master_topic_name: "vision2master"
+    gamecontroller2master_topic_name: "gamecontroldata"
+    master2ik_topic_name: "master2ik"
+
+    speed: 20.0
     #기본 전진
     F_Max_Test_X: 40.0
     F_Min_Test_X: 30.0

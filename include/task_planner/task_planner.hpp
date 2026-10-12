@@ -67,22 +67,28 @@ class TaskPlanner : public rclcpp::Node
 
     std::string cur_state = "F"; // F, B, L, R, SS, S
 
-    int stabilizing_cnt = 0;
+    std::string vision2master_topic_name;
+    std::string gamecontroller2master_topic_name;
+    std::string master2ik_topic_name;
 
+    int stabilizing_cnt = 0;
     int ratio_cnt = 0;
 
-    double dist_x = 0;
-    double dist_second_x = 0;
-    int detectived = 0;
-
     int ob_undetective_cnt = 0;
-
     int color_undetective_cnt = 0;
+
+    int Hz = 20;
+
+    double dist_x = 0;        // 장애물과의 직진방향 거리
+    double dist_second_x = 0; // 장애물2와의 직진방향 거리
 
     double map_width = 1.4;
     double close_std = 0.18;
+    double escape_std = 0.22;
+    double last_dir_escape_std = 0.32;
+    double two_std = 0.55;
 
-    // yaml에서 받아오기, +x, y, yaw값
+    // 보행 x, y, yaw값
     double F_Max_Test_X = 40.0;
     double F_Min_Test_X = 30.0;
 

@@ -2,37 +2,42 @@
 
 TaskPlanner::TaskPlanner() : Node("task_planner")
 {
-    speed = declare_parameter<double>("speed", 20);
     left_x_1_dist = declare_parameter<double>("start_x", 0.7);
     camera_x = left_x_1_dist;
     camera_y = declare_parameter<double>("start_y", 0.0);
     map_width = declare_parameter<double>("map_width", 1.4);
     close_std = declare_parameter<double>("close_std", 0.18);
+    escape_std = declare_parameter<double>("escape_std", 0.22);
+    last_dir_escape_std = declare_parameter<double>("last_dir_escape_std", 0.32);
+    two_std = declare_parameter<double>("two_std", 0.55);
+    Hz = declare_parameter<int>("Hz", 20);
+    vision2master_topic_name = declare_parameter<std::string>("vision2master_topic_name", "vision2master");
+    gamecontroller2master_topic_name =
+        declare_parameter<std::string>("gamecontroller2master_topic_name", "gamecontroldata");
+    master2ik_topic_name = declare_parameter<std::string>("master2ik_topic_name", "master2ik");
 
+    speed = declare_parameter<double>("speed", 20);
     F_Max_Test_X = declare_parameter<double>("F_Max_Test_X", 40.0);
     F_Min_Test_X = declare_parameter<double>("F_Min_Test_X", 30.0);
-
     B_Test_x = declare_parameter<double>("B_Test_x", -15.0);
-
     L_Test_x = declare_parameter<double>("L_Test_x", -2.5);
     L_Test_side = declare_parameter<double>("L_Test_side", 3.5);
-
     R_Test_x = declare_parameter<double>("R_Test_x", 0.5);
     R_Test_side = declare_parameter<double>("R_Test_side", -3.5);
 
     // GlobalData_client = this->create_client<GlobalData>("vision_node"); // vision node 이름
 
     VisionData_sub = this->create_subscription<VisionData>(
-        "vision2master", 10, std::bind(&TaskPlanner::vision_data_topic_callback, this, std::placeholders::_1));
+        vision2master_topic_name, 10, std::bind(&TaskPlanner::vision_data_topic_callback, this, std::placeholders::_1));
 
     ControlData_sub = this->create_subscription<controlData>(
-        "gamecontroldata", 10, std::bind(&TaskPlanner::control_data_callback, this, std::placeholders::_1));
+        gamecontroller2master_topic_name, 10,
+        std::bind(&TaskPlanner::control_data_callback, this, std::placeholders::_1));
 
-    Master2Ik_pub = this->create_publisher<M2Ik>("master2ik", 10);
+    Master2Ik_pub = this->create_publisher<M2Ik>(master2ik_topic_name, 10);
 
     timer_ =
-        this->create_wall_timer(std::chrono::milliseconds(1000 / 20), std::bind(&TaskPlanner::timer_callback, this));
-    // TODO: 리팩토링 할 때 Hz parameter로 빼기, +토픽 이름도
+        this->create_wall_timer(std::chrono::milliseconds(1000 / Hz), std::bind(&TaskPlanner::timer_callback, this));
 
     // request_global_data();
 }
@@ -40,6 +45,7 @@ TaskPlanner::TaskPlanner() : Node("task_planner")
 TaskPlanner::~TaskPlanner()
 {
     stop();
+    update_state();
 }
 
 // ---
@@ -149,11 +155,13 @@ void TaskPlanner::timer_callback() // temp
     if (isRedBlue == 0)
     {
         color_undetective_cnt++;
-        if (color_undetective_cnt > 60)
+        if (color_undetective_cnt > Hz * 3) // 3s
+        {
             if (camera_x < map_width / 3 && camera_x >= 0)
                 y_length = -1;
             else if (camera_x > map_width * 2 / 3 && camera_x <= map_width)
                 y_length = 1;
+        }
     }
     else
         color_undetective_cnt = 0;
@@ -242,7 +250,7 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
         double center_ratio = obstacle_ratio[1];
         double left_ratio = obstacle_ratio[0];
         double right_ratio = obstacle_ratio[2];
-        // if (center_ratio >= 0.1)
+
         if ((center_ratio >= 0.01 && left_ratio >= 0.5 && right_ratio < 0.2)) // 왼쪽+중앙 장애물(vision 기준)
         {
             ratio_cnt = 10;
@@ -278,8 +286,6 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
 
     if (is_detectived)
     {
-        float escape_std = 0.22;
-        float last_dir_escape_std = 0.32;
         if (last_dir == -1)
         {
             if (dist_x <= map_width && dist_x > last_dir_escape_std)
@@ -303,7 +309,6 @@ void TaskPlanner::test_vision_walk(std::array<std::array<double, 2>, 3> dist)
             return;
         }
 
-        double two_std = 0.55;
         if (dist_x >= 0 && dist_x < escape_std)
         {
             // 2개 연속 && 2개 다 인식된 경우 빈 곳으로 이동
