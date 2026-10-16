@@ -2,10 +2,10 @@
   ros__parameters:
     map_width: 1.4
 
-    close_std: 0.18
+    close_std: 0.19
     escape_std: 0.22
     last_dir_escape_std: 0.32
-    two_std: 0.55
+    two_std: 0.60
 
     start_x: 0.7
     start_y: 0.0
@@ -29,11 +29,11 @@
     B_Test_Yaw: 0.00
 
     #왼쪽 수평 이동
-    L_Test_x: -2.5
-    L_Test_side: 3.50
+    L_Test_x: 0.00 #-4.00
+    L_Test_side: 10.00 #3.50
     L_Test_Yaw: 0.00
 
     #오른쪽 수평 이동
-    R_Test_x: 0.5
-    R_Test_side: -4.0
+    R_Test_x: 0.00 #-4.00
+    R_Test_side: -10.00 #-4.0
     R_Test_Yaw: 0.00

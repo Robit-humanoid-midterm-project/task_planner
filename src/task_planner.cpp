@@ -19,6 +19,7 @@ TaskPlanner::TaskPlanner() : Node("task_planner")
     speed = declare_parameter<double>("speed", 20);
     F_Max_Test_X = declare_parameter<double>("F_Max_Test_X", 40.0);
     F_Min_Test_X = declare_parameter<double>("F_Min_Test_X", 30.0);
+    F_Test_Side = declare_parameter<double>("F_Test_Side", 0.0);
     B_Test_x = declare_parameter<double>("B_Test_x", -15.0);
     L_Test_x = declare_parameter<double>("L_Test_x", -2.5);
     L_Test_side = declare_parameter<double>("L_Test_side", 3.5);
@@ -410,7 +411,7 @@ void TaskPlanner::forward()
 {
     // x_length = speed; // 20
     x_length = F_Min_Test_X;
-    y_length = 0;
+    y_length = F_Test_Side;
     yaw = 0;
     flag = 1;
     cur_state = "F";

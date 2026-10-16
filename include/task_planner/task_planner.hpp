@@ -91,6 +91,7 @@ class TaskPlanner : public rclcpp::Node
     // 보행 x, y, yaw값
     double F_Max_Test_X = 40.0;
     double F_Min_Test_X = 30.0;
+    double F_Test_Side = 0;
 
     double B_Test_x = -15.0;
 
